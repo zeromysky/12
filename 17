@@ -1,0 +1,212 @@
+blog
+
+https://www.cnblogs.com/gaohj/p/6797007.html
+
+查看swoole 安装版本 
+/usr/local/php/bin/php -r"echo swoole_version();"
+1.9.6
+
+/usr/local/php/bin/php -v
+7.0.23
+
+
+1.8.7或更高版本已完全兼容PHP7
+2.0.12版本开始不再支持PHP5
+
+
+/usr/local/php/bin/php -i |grep swoole  查看配置文件在哪里，编译参数
+/usr/local/php/bin/php -m |grep swoole  查看php加载的模块
+
+
+php 创建进程
+
+$pid = pcntl_fork();
+//父进程和子进程都会执行下面代码
+if ($pid == -1) {
+    //错误处理：创建子进程失败时返回-1.
+    die('could not fork');
+} else if ($pid) {
+    //父进程会得到子进程号，所以这里是父进程执行的逻辑
+    pcntl_wait($status); //等待子进程中断，防止子进程成为僵尸进程。
+} else {
+    //子进程得到的$pid为0, 所以这里是子进程执行的逻辑。
+}
+
+
+--table.php
+<?php
+/**
+ * https://wiki.swoole.com/wiki/page/p-table.html
+ * swoole_table一个基于共享内存和锁实现的超高性能，并发数据结构。
+ * 用于解决多进程/多线程数据共享和同步加锁问题。
+ */
+
+/*
+	swoole_table::TYPE_INT 整形字段
+	swoole_table::TYPE_FLOAT 浮点字段
+	swoole_table::TYPE_STRING 字符串字段
+*/
+
+use Swoole\Table;
+$table = new \Swoole\Table(1);
+
+$table->column('c1',Table::TYPE_STRING, 2); //创建列 超过大小自动截取
+$table->column('c2',Table::TYPE_STRING, 10);
+$table->column('c3',Table::TYPE_INT, 10);
+$table->create(); //创建表 
+
+//设置
+// for ($i=0; $i <100 ; $i++) { 
+// 	$table->set('myKey'.$i,['c1'=>"test".$i,'c2'=>"test".$i]);
+// }
+//获取
+// var_dump($table->get('myKey'));
+
+//增长
+// $table->incr('mykey', 'c3',1);
+//减少
+$table->decr('mykey', 'c3',1);
+//删除
+$table->del('mykey');
+//存在
+var_dump($table->exist('mykey'));
+
+
+echo "<pre>";
+
+//遍历
+foreach($table as $row)
+{
+    var_dump($row);
+}
+var_dump($table);
+var_dump($table);
+
+
+----lock.php
+<?php
+/**
+ * https://wiki.swoole.com/wiki/page/p-lock.html
+ */
+
+/*
+文件锁 SWOOLE_FILELOCK
+读写锁 SWOOLE_RWLOCK
+信号量 SWOOLE_SEM    
+
+互斥锁 SWOOLE_MUTEX
+	在编程中，引入了对象互斥锁的概念，来保证共享数据操作的完整性。
+	每个对象都对应于一个可称为" 互斥锁" 的标记，这个标记用来保证在任一时刻，只能有一个线程访问该对象。
+
+自旋锁 SWOOLE_SPINLOCK 
+
+https://www.cnblogs.com/biyeymyhjob/archive/2012/07/21/2602015.html
+*/
+
+// 不要循环创建/销毁锁的对象，否则会发生内存泄漏
+
+$lock = new swoole_lock(SWOOLE_MUTEX);
+echo "[Master]create lock\n";
+$lock->lock();
+$time1 = time();
+if (pcntl_fork() > 0)
+{
+	//主进程
+    sleep(10);
+    echo "[Master] Wait Lock\n";
+    var_dump(time()-$time1);
+    $lock->unlock();
+} 
+else
+{
+	//子进程
+    echo "[Child] Wait Lock\n";
+    var_dump(time()-$time1);
+    $lock->lock(); //子进程加锁 会等待 主进程解锁
+    echo "[Child] Get Lock\n";
+    $lock->unlock();
+    exit("[Child] exit\n");
+}
+echo "[Master]release lock\n";
+unset($lock);
+sleep(1);
+echo "[Master]exit\n";
+
+----file.php
+
+<?php
+/**
+ * https://wiki.swoole.com/wiki/page/p-async.html
+ */
+
+//异步写文件 4m
+swoole_async_set([
+	'thread_num'=>5,
+	'aio_mode'=>SWOOLE_AIO_BASE,// 设置异步文件IO的操作模式，目前支持SWOOLE_AIO_BASE、SWOOLE_AIO_LINUX 2种模式
+	'log_file'=>"./log_file.txt",
+	'log_level'=>1,
+]);
+
+
+// Swoole\Async::writeFile(string $filename, string $fileContent, callable $callback = null, int $flags = 0)
+
+$file_content = "test";
+swoole_async_writefile('./test.log', $file_content, function($filename) {
+    echo "wirte ok.\n";
+    echo "$filename.\n";
+}, FILE_APPEND);
+
+//异步读文件 4m
+swoole_async_readfile("./test.log", function($filename, $content) {
+     echo "$filename: $content";
+});
+
+//异步 dns 查询
+swoole_async_set(array(
+    'disable_dns_cache' => true,
+));
+
+swoole_async_dns_lookup("www.baidu.com", function($host, $ip){
+    echo "{$host} : {$ip}\n";
+});
+
+//异步 执行shell命令 1.9.22 可用
+// $pid = Swoole\Async::exec("ls", function ($result, $status) {
+//     var_dump($result, $status);
+// });
+// var_dump($pid);
+
+echo  "END.\n";  //用来证明是异步
+
+
+--event.php
+<?php
+/**
+ * https://wiki.swoole.com/wiki/page/119.html
+ * 事件
+ */
+
+
+
+$fp = stream_socket_client("tcp://www.baidu.com:80", $errno, $errstr, 30);
+fwrite($fp,"GET / HTTP/1.1\r\nHost: www.baidu.com\r\n\r\n");
+// 异步执行
+
+swoole_event_add($fp, function($fp) {
+	$html = "";
+    do {
+	   	$data = fread($fp, 8192);
+	   	if (strlen($data) == 0) {
+	   		break;
+	   	}
+	   	$html .= $data;
+	} while (true);
+    //socket处理完成后，从epoll事件中移除socket
+    var_dump($html);
+    swoole_event_del($fp);
+    fclose($fp);
+});
+echo "Finish\n";  //swoole_event_add不会阻塞进程，这行代码会顺序执行
+
+
+

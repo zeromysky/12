@@ -209,4 +209,137 @@ swoole_event_add($fp, function($fp) {
 echo "Finish\n";  //swoole_event_add不会阻塞进程，这行代码会顺序执行
 
 
+----process.php
 
+<?php
+/**
+ * https://wiki.swoole.com/wiki/page/p-process.html
+ * 进程
+ */
+
+
+// swoole_process提供了基于unixsock的进程间通信，使用很简单只需调用write/read或者push/pop即可
+// swoole_process支持重定向标准输入和输出，在子进程内echo不会打印屏幕，而是写入管道，读键盘输入可以重定向为管道读取数据
+// 配合swoole_event模块，创建的PHP子进程可以异步的事件驱动模式
+// swoole_process提供了exec接口，创建的进程可以执行其他程序，与原PHP父进程之间可以方便的通信
+
+
+$process = new swoole_process(function (swoole_process $process) {
+    $process->write('Hello'); //向管道写数据
+}, true);
+
+$pid = $process->start(); //开启
+usleep(1000000);  //用sleep 有问题
+echo $pid."\n"; //子进程的PID
+
+echo $process->pid."\n"; //属性为子进程的PID
+echo $process->pipe."\n";// 属性为管道的文件描述符
+
+echo $process->read()."\n"; // 输出 Hello
+
+echo "end"."\n";
+echo "---------------------------"."\n";
+
+// 因为子进程会继承父进程的内存和IO句柄，所以如果父进程要创建多个子进程，
+// 务必要等待创建完毕后再使用swoole_event_add/异步swoole_client/定时器/信号等异步IO函数。
+
+// $workers = [];
+// $worker_num = 3;//创建的进程数
+// // $master_pid = posix_getpid();
+// for($i=0;$i<$worker_num ; $i++){
+//     $process = new swoole_process('process');
+//     $pid = $process->start();
+//     $workers[$pid] = $process;
+// }
+
+// foreach($workers as $process){
+//     //子进程也会包含此事件
+//     swoole_event_add($process->pipe, function ($pipe) use($process){
+//     $data = $process->read();
+//         echo "RECV: " . $data.PHP_EOL;
+//     });
+// }
+
+// //子进程
+// function process(swoole_process $process){// 第一个处理
+//     $process->write($process->pid);
+//     echo $process->pid,"\t",$process->callback .PHP_EOL;
+
+// }
+
+// //主进程结束后这里开始
+// swoole_process::signal(SIGCHLD, function($sig) use($workers){
+//   //必须为false，非阻塞模式
+//   while($ret =  swoole_process::wait(false)) {
+//     echo "PID={$ret['pid']}\n";
+//     unset($workers[$ret['pid']]);
+//     if(empty($workers)){
+//         var_dump('child-end');
+//         //杀主进程 master_pid 
+//         exit();
+//     }
+//   }
+
+// });
+
+// 0 表示为真实时间,触发SIGALAM信号，
+// 1 表示用户态CPU时间，触发SIGVTALAM信号，
+// 2 表示用户态+内核态时间，触发SIGPROF信号
+
+echo "master-end"."\n";
+
+echo "---------------------------"."\n";
+
+//定时器
+// swoole_process::signal(SIGALRM, function () {
+//     static $i = 0;
+//     echo "#{$i}\talarm\n";
+//     $i++;
+//     if ($i > 20) {
+//         swoole_process::alarm(-1);
+//         exit();
+//     }
+// });
+
+// //每隔 100ms 运行  swoole_process::signal(SIGALRM,function(){})
+// swoole_process::alarm(100 * 1000);
+
+
+//消息队列
+//如果程序中只调用了useQueue方法，未调用freeQueue在程序结束时 相同的key并不会清除数据。
+$workers = [];
+$worker_num = 2;
+
+for($i = 0; $i < $worker_num; $i++)
+{
+    $process = new swoole_process('callback_function', false, false);
+    $process->useQueue(123,2|swoole_process::IPC_NOWAIT);
+    $pid = $process->start();
+    $workers[$pid] = $process;
+    //echo "Master: new worker, PID=".$pid."\n";
+}
+
+function callback_function(swoole_process $worker)
+{
+    //echo "Worker: start. PID=".$worker->pid."\n";
+    //recv data from master
+    $recv = $worker->pop(); //获取
+
+    echo "From Master: $recv\n";
+
+    sleep(2);
+    $worker->exit(0);
+}
+
+foreach($workers as $pid => $process)
+{
+    $process->push("hello worker[$pid]\n"); //写入
+}
+
+for($i = 0; $i < $worker_num; $i++)
+{
+    $ret = swoole_process::wait();
+    $pid = $ret['pid'];
+    unset($workers[$pid]);
+    echo "Worker Exit, PID=".$pid.PHP_EOL;
+}

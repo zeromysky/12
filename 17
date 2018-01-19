@@ -343,3 +343,360 @@ for($i = 0; $i < $worker_num; $i++)
     unset($workers[$pid]);
     echo "Worker Exit, PID=".$pid.PHP_EOL;
 }
+
+
+----http-server.php
+
+<?php
+/**
+ * http 服务器 https://wiki.swoole.com/wiki/page/326.html
+ */
+
+// 【同步模式】
+
+// 这种模式等同于nginx+php-fpm/apache，它需要设置大量worker进程来完成并发请求处理。
+// Worker进程内可以使用同步阻塞IO，
+// 编程方式与普通PHP Web程序完全一致。
+// 与php-fpm/apache不同的是，客户端连接并不会独占进程，服务器依然可以应对大量并发连接。
+
+// 【异步模式】
+
+// 这种模式下整个服务器是异步非阻塞的，服务器可以应对大规模的并发连接和并发请求。
+// 但编程方式需要完全使用异步API，如MySQL、redis、http_client、file_get_contents、sleep等阻塞IO操作必须切换为异步的方式，
+// 如异步swoole_client，swoole_event_add，swoole_timer，swoole_get_mysqli_sock等API。
+
+
+// $http = new swoole_http_server("0.0.0.0", 9501);
+// $http->on('request', function ($request, $response) {
+//     var_dump($request);
+//     $response->header("Content-Type", "text/html; charset=utf-8");
+//     $response->end("<h1>Hello Swoole. #".rand(1000, 9999)."</h1>");
+// });
+// $http->start();
+
+// https://www.cnblogs.com/jkko123/p/6509976.html
+// http://tool.oschina.net/commons/
+
+$http = new swoole_http_server('0.0.0.0', 8888);
+//设置回调函数，当收到请求时，会回调此函数
+$http->on('request', function($request, $response) {
+    $pathInfo = $request->server['path_info'];
+    $file = __DIR__ . $pathInfo;
+
+    if(is_file($file)) {
+        //判断文件后缀名
+        if(pathinfo($pathInfo)['extension'] == 'php') {
+            ob_start();
+            include $file;
+            $content = ob_get_contents();
+            ob_end_clean();
+            $response->end($content);
+        } elseif(pathinfo($pathInfo)['extension'] == 'css') {
+        	//获取文件的MIME
+		    
+		    $response->header('Content-Type', "text/css;charset=utf-8");
+        	$response->sendfile($file);
+        } elseif(pathinfo($pathInfo)['extension'] == 'js') {
+        	//获取文件的MIME
+		   
+		    $response->header('Content-Type', "application/x-javascript;charset=utf-8");
+        	$response->sendfile($file);
+        }else {
+        	//获取文件的MIME
+		    $fileInfo = finfo_open(FILEINFO_MIME);
+		    $fileMime = finfo_file($fileInfo, $file);
+		    var_dump(pathinfo($pathInfo)['extension']);
+		    var_dump($fileMime);
+		    $response->header('Content-Type', $fileMime);
+        	$response->sendfile($file);
+        }
+    } else {
+        $response->status(404);
+        $response->end('not found');
+    }
+
+});
+//启动http服务
+$http->start();
+
+-----websocket.php
+
+<?php
+/**
+ * WebSocket https://wiki.swoole.com/wiki/page/397.html
+ */
+
+
+$server = new swoole_websocket_server("0.0.0.0", 9501);
+
+$server->set(array(
+'open_length_check' => true,
+'package_max_length' => 81920, //1024*80
+));
+
+$server->on('open', function (swoole_websocket_server $server, $request) {
+        echo "server: handshake success with fd{$request->fd}\n";
+    });
+$server->on('message', function (swoole_websocket_server $server, $frame) {
+        echo "receive from {$frame->fd}:{$frame->data},opcode:{$frame->opcode},fin:{$frame->finish}\n";
+        $server->push($frame->fd, "{$frame->data} | this is server");
+    });
+
+$server->on('request', function (swoole_http_request $request, swoole_http_response $response) {
+        global $server;//调用外部的server
+        // $server->connections 遍历所有websocket连接用户的fd，给所有用户推送
+        foreach ($server->connections as $fd) {
+            $this->server->push($fd, $request->get['message']);
+        }
+    });
+$server->on('close', function ($ser, $fd) {
+        echo "client {$fd} closed\n";
+    });
+$server->start();
+
+
+
+
+
+
+
+// //创建websocket服务器对象，监听0.0.0.0:9502端口 
+// $ws = new swoole_websocket_server(“0.0.0.0”, 9502);
+
+// //监听WebSocket连接打开事件
+// $ws->on('open', function ($ws, $request) {
+//     var_dump($request->fd, $request->get, $request->server);
+//     $ws->push($request->fd, "hello, welcome\n");
+// });
+
+// //监听WebSocket消息事件
+// $ws->on('message', function ($ws, $frame) {
+//     echo "Message: {$frame->data}\n";
+//     $ws->push($frame->fd, "server: {$frame->data}");
+// });
+
+// //监听WebSocket连接关闭事件
+// $ws->on('close', function ($ws, $fd) {
+//     echo "client-{$fd} is closed\n";
+// });
+
+// $ws->start();
+
+
+
+// var wsServer = 'ws://192.168.50.151:9502';
+// var websocket = new WebSocket(wsServer);
+// websocket.onopen = function (evt) {
+//     console.log("Connected to WebSocket server.");
+// };
+
+// websocket.onclose = function (evt) {
+//     console.log("Disconnected");
+// };
+
+// websocket.onmessage = function (evt) {
+//     console.log('Retrieved data from server: ' + evt.data);
+// };
+
+// websocket.onerror = function (evt, e) {
+//     console.log('Error occured: ' + evt.data);
+// };
+
+
+
+
+
+// Http/WebSocket
+
+// swoole内置对http/websocket 2种协议的支持，如果要实现一个http服务或者websocket服务，
+// 直接用swoole_http_server和swoole_websocket_server即可。
+// EOF
+
+// $server->set(array('open_eof_split' => true, 'package_eof' => "\r\n"));
+
+// EOF协议处理的原理是每个数据包结尾加一串特殊字符表示包已结束。
+// 如memcache、ftp、stmp都使用\r\n作为结束符。发送数据时只需要在包末尾增加\r\n即可。使用EOF协议处理，
+// 一定要确保数据包中间不会出现EOF，否则会造成分包错误。
+// Length
+
+---tcp-server.php
+
+
+<?php
+/**
+ * tcp server  https://wiki.swoole.com/wiki/page/p-server.html
+ */
+
+//创建Server对象，监听 127.0.0.1:9501端口
+$serv = new swoole_server("127.0.0.1", 9501); 
+$serv->set(array(
+    'worker_num' => 4,
+    // 'daemonize' => true,
+    'backlog' => 128,
+    'task_worker_num' => 4
+));
+//监听连接进入事件
+$serv->on('connect', function ($serv, $fd) {  
+    echo "Client: Connect.\n";
+});
+
+//监听数据接收事件
+$serv->on('receive', function ($serv, $fd, $from_id, $data) {
+    
+    //异步任务
+    $task_id = $serv->task($data);
+    echo "Dispath AsyncTask: id=$task_id\n";
+    $serv->send($fd, "Server: ".$data);
+});
+
+//处理异步任务
+$serv->on('task', function ($serv, $task_id, $from_id, $data) {
+    echo "New AsyncTask[id=$task_id]".PHP_EOL;
+    //返回任务执行的结果
+    $serv->finish("$data -> OK");
+});
+
+//处理异步任务的结果
+$serv->on('finish', function ($serv, $task_id, $data) {
+    echo "AsyncTask[$task_id] Finish: $data".PHP_EOL;
+});
+
+
+//监听连接关闭事件
+$serv->on('close', function ($serv, $fd) {
+    echo "Client: Close.\n";
+});
+
+//启动服务器
+$serv->start(); 
+
+-----udp-server.php
+
+<?php
+/**
+ * udp
+ */
+
+
+
+//创建Server对象，监听 127.0.0.1:9502端口，类型为SWOOLE_SOCK_UDP
+$serv = new swoole_server("127.0.0.1", 9501, SWOOLE_PROCESS, SWOOLE_SOCK_UDP); 
+$serv->set([
+    'worker_num' => 4, # 4个worker
+    'task_worker_num' => 4, # 4个task
+    'deamonize' => false,
+]);
+//监听数据接收事件
+$serv->on('Packet', function ($serv, $data, $clientInfo) {
+    $serv->sendto($clientInfo['address'], $clientInfo['port'], "Server ".$data);
+    var_dump($clientInfo);
+    $serv->task($data);
+});
+
+
+$serv->on('Task', function ($serv, $task_id, $from_id, $data) {
+    echo "This Task {$task_id} from Worker {$from_id}\n";
+    echo "Data: {$data}\n";
+    //模拟慢io查询、
+    for($i = 0 ; $i < 2 ; $i ++ ) {
+        sleep(1);
+        echo "Task {$task_id} Handle {$i} times...\n";
+    }
+    //return 数据 给 Finish
+    return "Task {$task_id}'s result";
+});
+
+
+$serv->on('Finish', function ($serv,$task_id, $data) {
+    echo "Task {$task_id} finish\n";
+    echo "Result: {$data}\n";
+});
+
+
+//启动服务器
+$serv->start(); 
+
+----tcp-client.php
+
+
+<?php
+/**
+ * 客戶端  
+ */
+
+// 同步异步是对客户端
+
+// //同步客户端
+// $client = new swoole_client(SWOOLE_SOCK_TCP);
+
+// //连接到服务器
+// if (!$client->connect('127.0.0.1', 9501,0.5))
+// {
+//     die("connect failed.");
+// }
+// //向服务器发送数据
+// if (!$client->send("hello world"))
+// {
+//     die("send failed.");
+// }
+// //从服务器接收数据
+// $data = $client->recv();
+// if (!$data)
+// {
+//     die("recv failed.");
+// }
+// echo $data;
+// //关闭连接
+// $client->close();
+
+// echo "end\n";
+// echo "---------------------\n";
+
+// //异步客户端
+// $client = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
+
+// //注册连接成功回调
+// $client->on("connect", function($cli) {
+// 	$data = json_encode(['fun'=>"dump"]);
+//     $cli->send($data);
+// });
+
+// //注册数据接收回调
+// $client->on("receive", function($cli, $data){
+//     echo "Received: ".$data."\n";
+//     $cli->close();
+// });
+
+// //注册连接失败回调
+// $client->on("error", function($cli){
+//     echo "Connect failed\n";
+// });
+
+// //注册连接关闭回调
+// $client->on("close", function($cli){
+//     echo "Connection close\n";
+// });
+
+// //发起连接
+// $client->connect('127.0.0.1', 9501, 0.5);
+
+// echo "end\n";
+// echo "-----------------------\n";
+
+
+
+$client = new Swoole\Client(SWOOLE_SOCK_UDP);
+$client->connect('127.0.0.1', 9501, 1);
+$i = 0;
+while ($i < 1000) {
+    $client->send($i."\n");
+    $message = $client->recv();
+    echo "Get Message From Server:{$message}\n";
+    $i++;
+}
+
+
+
+
+
+

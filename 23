@@ -1,0 +1,185 @@
+socket-server.php
+
+
+
+<?php
+/**
+ * php socket 
+ */
+// blog
+// https://www.cnblogs.com/WuNaiHuaLuo/p/6107771.html
+
+
+
+//确保在连接客户端时不会超时
+set_time_limit(0);
+
+$ip = '127.0.0.1';
+$port = 1935;
+
+/*
+ +-------------------------------
+ *    @socket通信整个过程
+ +-------------------------------
+ *    @socket_create
+ *    @socket_bind
+ *    @socket_listen
+ *    @socket_accept
+ *    @socket_read
+ *    @socket_write
+ *    @socket_close
+ +--------------------------------
+ */
+
+/*----------------    以下操作都是手册上的    -------------------*/
+
+// AF_INET 	IPv4 网络协议。TCP 和 UDP 都可使用此协议。
+// AF_INET6 	IPv6 网络协议。TCP 和 UDP 都可使用此协议。
+// AF_UNIX 	本地通讯协议。具有高性能和低成本的 IPC（进程间通讯）。 
+
+// SOCK_STREAM 提供一个顺序化的、可靠的、全双工的、基于连接的字节流。支持数据传送流量控制机制。TCP 协议即基于这种流式套接字。
+// SOCK_DGRAM 	提供数据报文的支持。(无连接，不可靠、固定最大长度).UDP协议即基于这种数据报文套接字。 
+
+// 如果所需的协议是 TCP 或 UDP，可以直接使用常量 SOL_TCP 和 SOL_UDP 。 
+
+// socket_set_option($socket参数1 ，$level 参数2，$optname 参数3，$optval 参数4)
+
+// 这个函数的作用是给套接字设置数据流选项，还是一个很重要的函数。
+
+// 参数1：socket_create或者socket_accept的函数返回值
+
+// 参数2：SOL_SOCKET，好像只有这个选项
+
+// 参数3与参数4是相关联的，
+
+// 参数3可为：SO_REUSEADDR　　SO_RCVTIMEO     S0_SNDTIMEO
+
+// 解释一下：
+
+// SO_REUSEADDR　　是让套接字端口释放后立即就可以被再次使用
+
+// 　　　　　　　　参数3假如是这个，则参数4可以为true或者false
+
+// SO_RCVTIMEO　　 是套接字的接收资源的最大超时时间
+
+// SO_SNDTIMEO　　　是套接字的发送资源的最大超时时间
+
+// 参数3假如是这两个，则参数4是一个这样的数组array('sec'=>1,'usec'=>500000)
+
+// 数组里面都是设置超时的最大时间，不过，一个是秒为单位，一个是微秒单位，作用都一样
+
+
+
+if(($sock = socket_create(AF_INET,SOCK_STREAM,SOL_TCP)) < 0) {
+    echo "socket_create() 失败的原因是:".socket_strerror($sock)."\n";
+}
+
+if(($ret = socket_bind($sock,$ip,$port)) < 0) {
+    echo "socket_bind() 失败的原因是:".socket_strerror($ret)."\n";
+}
+
+if(($ret = socket_listen($sock,4)) < 0) {
+    echo "socket_listen() 失败的原因是:".socket_strerror($ret)."\n";
+}
+
+socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1); //重用端口
+socket_set_nonblock($sock); //非阻塞
+
+
+$count = 0;
+
+do {
+	/*接收请求*/
+    if (($msgsock = socket_accept($sock)) < 0) {
+        echo "socket_accept() failed: reason: " . socket_strerror($msgsock) . "\n";
+        break;
+    } else {
+        
+        //发到客户端
+        $msg ="测试成功！\n";
+        socket_write($msgsock, $msg, strlen($msg));
+        
+        echo "测试成功了啊\n";
+        $buf = socket_read($msgsock,8192);
+        
+        
+        $talkback = "收到的信息:$buf\n";
+        echo $talkback;
+        
+        if(++$count >= 5){
+            break;
+        };
+        
+    
+    }
+    //echo $buf;
+    socket_close($msgsock);
+
+} while (true);
+
+socket_close($sock);
+
+
+
+socket-client.php
+
+<?php
+/**
+ * socket 客户端
+ */
+
+error_reporting(E_ALL);
+set_time_limit(0);
+echo "<h2>TCP/IP Connection</h2>\n";
+
+$port = 1935;
+$ip = "127.0.0.1";
+
+/*
+ +-------------------------------
+ *    @socket连接整个过程
+ +-------------------------------
+ *    @socket_create
+ *    @socket_connect
+ *    @socket_write
+ *    @socket_read
+ *    @socket_close
+ +--------------------------------
+ */
+
+$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+if ($socket < 0) {
+    echo "socket_create() failed: reason: " . socket_strerror($socket) . "\n";
+}else {
+    echo "OK.\n";
+}
+
+echo "试图连接 '$ip' 端口 '$port'...\n";
+$result = socket_connect($socket, $ip, $port);
+if ($result < 0) {
+    echo "socket_connect() failed.\nReason: ($result) " . socket_strerror($result) . "\n";
+}else {
+    echo "连接OK\n";
+}
+
+$in = "Ho\r\n";
+$in .= "first blood\r\n";
+$out = '';
+
+if(!socket_write($socket, $in, strlen($in))) {
+    echo "socket_write() failed: reason: " . socket_strerror($socket) . "\n";
+}else {
+    echo "发送到服务器信息成功！\n";
+    echo "发送的内容为:<font color='red'>$in</font> <br>";
+}
+
+while($out = socket_read($socket, 8192)) {
+    echo "接收服务器回传信息成功！\n";
+    echo "接受的内容为:",$out;
+}
+
+
+echo "关闭SOCKET...\n";
+socket_close($socket);
+echo "关闭OK\n";
+

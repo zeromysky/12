@@ -1,0 +1,549 @@
+##ccui
+
+#button
+
+var HelloWorldLayer = cc.Layer.extend({
+
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; //宽和高
+
+        var button = this._button =  new ccui.Button();
+        button.setTouchEnabled(true);
+
+        /*缩放*/
+        button.setScale9Enabled(true);
+        button.setContentSize(cc.size(150, 48));
+        /*按下效果*/
+        button.setPressedActionEnabled(true);
+        /*标题*/
+        button.setTitleText("Title Button");
+        // button.ignoreContentAdaptWithSize(false);
+        //设置名称
+        button.setName("button");
+        button.setZoomScale(0.2);
+        //setNormalizedPosition()是相对于父亲结点的位置，如果父亲结点变化了，相应的儿子  
+        //也会改变位置，这样就造成了儿子在运动一样，下面的效果就是利用这点实现的。 
+        button.setNormalizedPosition(0.5, 0.5);
+        button.setScale(2.0);
+
+        button.loadTextures("res/ccs-res/cocosui/animationbuttonnormal.png", "res/ccs-res/cocosui/animationbuttonpressed.png", "");
+        button.x = size.width / 2.0;
+        button.y = size.height / 2.0;
+
+        //标题效果
+        var title = button.getTitleRenderer();
+        button.setTitleColor(cc.color.RED);
+        title.enableShadow(cc.color.BLACK, cc.size(2,-2));
+        
+        // button.setBright(false);
+        // button.addClickEventListener(function () {
+        //         button.setBright(true);
+        //     });
+        
+        //x轴
+        button.setFlippedX(true);
+        //y轴
+        button.setFlippedY(true);
+
+        button.addTouchEventListener(this.touchEvent, this);
+        this.addChild(button);
+        //查找
+        this.getChildByName("button");
+
+        var label = new cc.LabelTTF("setOpacity", "Arial", 25);
+        var menuItem = new cc.MenuItemLabel(label,this.setOpacityTest,this);
+        var menu = new cc.Menu(menuItem);
+        menu.x = 0;
+        menu.y = 0;
+        menuItem.x = size.width-100;
+        menuItem.y = 270;
+        this.addChild(menu);
+
+        var alert = new ccui.Text("Button should scale when clicked","Arial",20);
+        alert.setColor(cc.color(159, 168, 176));
+        alert.setPosition(size.width / 2.0,
+         size.height / 2.0 + 100);
+        this.addChild(alert);
+
+        console.log(size);
+        return true;
+    },
+    setOpacityTest:function(){
+        var button = this._button;
+        var opacity = (button._realOpacity===255? 100:255);
+        button.setOpacity(opacity);
+    },
+    touchEvent: function (sender, type) {
+        switch (type) {
+            case ccui.Widget.TOUCH_BEGAN:
+                cc.log("Touch Down");
+                break;
+
+            case ccui.Widget.TOUCH_MOVED:
+                cc.log("Touch Move");
+                break;
+
+            case ccui.Widget.TOUCH_ENDED:
+                cc.log("Touch Up");
+                // sender.setScale9Enabled(!sender.isScale9Enabled());
+                // sender.setContentSize(200,100);
+                break;
+
+            case ccui.Widget.TOUCH_CANCELED:
+                cc.log("Touch Cancelled");
+                break;
+
+            default:
+                break;
+        }
+    }
+});
+
+#checkbox
+
+var HelloWorldLayer = cc.Layer.extend({
+
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; //宽和高
+        var widgetSize = this.getContentSize();
+        console.log(widgetSize);
+        console.log(size);
+
+
+        var checkBox = new ccui.CheckBox();
+        checkBox.setTouchEnabled(true);
+        checkBox.loadTextures("res/ccs-res/cocosui/check_box_normal.png",
+            "res/ccs-res/cocosui/check_box_normal_press.png",
+            "res/ccs-res/cocosui/check_box_active.png",
+            "res/ccs-res/cocosui/check_box_normal_disable.png",
+            "res/ccs-res/cocosui/check_box_active_disable.png");
+        checkBox.x = widgetSize.width / 2.0;
+        checkBox.y = widgetSize.height / 2.0;
+        checkBox.addEventListener(this.selectedStateEvent, this);
+        // this.addChild(checkBox);
+
+
+
+        // Create the checkbox
+        var checkBox2 = new ccui.CheckBox("res/ccs-res/cocosui/check_box_normal.png", "res/ccs-res/cocosui/check_box_active.png");
+        checkBox2.setPosition(cc.p(widgetSize.width / 2 - 150, widgetSize.height / 2));
+        checkBox2.ignoreContentAdaptWithSize(false);
+        checkBox2.setZoomScale(0.5);
+        checkBox2.setContentSize(cc.size(80,80));
+        checkBox2.setName("bigCheckBox");
+        this.addChild(checkBox2);
+
+
+        // Create the checkbox
+        var checkBoxDisabled = new ccui.CheckBox("res/ccs-res/cocosui/check_box_normal.png", "res/ccs-res/cocosui/check_box_active.png");
+        checkBoxDisabled.setPosition(cc.p(widgetSize.width / 2 + 20, widgetSize.height / 2));
+        checkBoxDisabled.setEnabled(false);
+        checkBoxDisabled.setBright(false);
+        this.addChild(checkBoxDisabled);
+
+        var checkBoxDisabled2 = new ccui.CheckBox("res/ccs-res/cocosui/check_box_normal.png", "res/ccs-res/cocosui/check_box_active.png");
+        checkBoxDisabled2.setPosition(cc.p(widgetSize.width / 2 + 70, widgetSize.height / 2));
+        checkBoxDisabled2.setEnabled(false);
+        checkBoxDisabled2.setBright(false);
+        //默认选中
+        checkBoxDisabled2.setSelected(true);
+        this.addChild(checkBoxDisabled2);
+       
+
+        console.log(size);
+        return true;
+    },
+    selectedStateEvent: function (sender, type) {
+        switch (type) {
+            case  ccui.CheckBox.EVENT_UNSELECTED:
+                cc.log("Unselected");
+                break;
+            case ccui.CheckBox.EVENT_SELECTED:
+                cc.log("Selected");
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    
+});
+
+#Text
+
+var HelloWorldLayer = cc.Layer.extend({
+
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; //宽和高
+        var widgetSize = this.getContentSize();
+
+        // //文本
+        // var text = new ccui.Text("中国abc", "AmericanTypewriter", 30);
+        // text.setPosition(cc.p(widgetSize.width / 2, widgetSize.height / 2 + text.height / 4));
+        // this.addChild(text);
+
+        // // Create the line wrap
+        // var text = new ccui.Text("TextArea Widget can line wrap","AmericanTypewriter",32);
+        // //换行
+        // text.ignoreContentAdaptWithSize(false);
+        // text.setContentSize(cc.size(280, 150));
+        // text.setTextHorizontalAlignment(cc.TEXT_ALIGNMENT_CENTER);
+        // text.setTouchScaleChangeEnabled(true);
+        // text.setTouchEnabled(true);
+        // text.addTouchEventListener(function(sender, type){
+        //     if (type == ccui.Widget.TOUCH_ENDED){
+        //         if (text.width == 280){
+        //             text.setContentSize(cc.size(380,100));
+        //         }else {
+        //             text.setContentSize(cc.size(280, 150));
+        //         }
+        //     }
+        // });
+        // text.setPosition(widgetSize.width / 2, widgetSize.height / 2 - text.height / 8);
+        // this.addChild(text);
+
+        // var alert = new ccui.Text();
+        // alert.setString("Label Effect");
+        // alert.setFontName("Marker Felt");
+        // alert.setFontSize(30);
+        // alert.setColor(cc.color(159, 168, 176));
+        // alert.setPosition(widgetSize.width / 2, widgetSize.height / 2 - alert.height * 3.05);
+        // this.addChild(alert);
+
+
+        // var text = new ccui.Text("Text","res/fonts/A Damn Mess.ttf",30);
+        // text.setPosition(widgetSize.width / 2, widgetSize.height / 2 +100);
+        // this.addChild(text);
+
+
+        var leftText = new ccui.Text("ignore content", "Marker Felt", 10);
+        leftText.setPosition(cc.p(widgetSize.width / 2 - 50,widgetSize.height / 2));
+        leftText.ignoreContentAdaptWithSize(false);
+        leftText.setTextAreaSize(cc.size(60,60));
+        leftText.setString("Text line with break\nText line with break\nText line with break\nText line with break\n");
+        leftText.setTouchScaleChangeEnabled(true);
+        leftText.setTouchEnabled(true);
+        this.addChild(leftText);
+
+        var rightText = new ccui.Text("ignore content", "Marker Felt", 10);
+        rightText.setPosition(cc.p(widgetSize.width / 2 + 50,
+            widgetSize.height / 2));
+        rightText.setString("Text line with break\nText line with break\nText line with break\nText line with break\n");
+        //note: setTextAreaSize must be used with ignoreContentAdaptWithSize(false)
+        rightText.setTextAreaSize(cc.size(100,30)); //设置文本区域
+        rightText.ignoreContentAdaptWithSize(false); //换行
+        this.addChild(rightText);
+
+        var halighButton = new ccui.Button();
+        halighButton.setTitleText("Alignment Right");
+        halighButton.addClickEventListener(function(){
+            leftText.setTextHorizontalAlignment(cc.TEXT_ALIGNMENT_RIGHT); //对齐方式
+            rightText.setTextHorizontalAlignment(cc.TEXT_ALIGNMENT_RIGHT);
+        });
+        halighButton.setPosition(cc.p(widgetSize.width/2 - 50,
+                widgetSize.height/2 - 50));
+        this.addChild(halighButton);
+
+        console.log(size);
+        return true;
+    }
+   
+});
+
+#input
+
+var HelloWorldLayer = cc.Layer.extend({
+
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+        // Create the textfield
+        // var textField = new ccui.TextField("PlaceHolder", "Marker Felt", 30);
+        // textField.x = widgetSize.width / 2.0;
+        // textField.y = widgetSize.height / 2.0;
+        // textField.addEventListener(this.textFieldEvent, this);
+        // this.addChild(textField);
+
+
+        var textField = new ccui.TextField();
+        //最大长度
+        textField.setMaxLengthEnabled(true);
+        textField.setMaxLength(300);
+        //开启
+        textField.setTouchEnabled(true);
+        textField.fontName = "Marker Felt";
+        textField.fontSize = 30;
+        //提示
+        textField.placeHolder = "input words here";
+        textField.x = widgetSize.width / 2.0;
+        textField.y = widgetSize.height / 2.0;
+        //密码
+        // textField.setPasswordEnabled(true);
+        // textField.setPasswordStyleText("*");
+        //换行
+        textField.ignoreContentAdaptWithSize(false);
+        //textField.getVirtualRenderer().setLineBreakWithoutSpace(true);
+        textField.setContentSize(240, 120);
+        //对齐方式
+        textField.setTextHorizontalAlignment(cc.TEXT_ALIGNMENT_CENTER);
+        textField.setTextVerticalAlignment(cc.TEXT_ALIGNMENT_CENTER);
+        //颜色
+        textField.setPlaceHolderColor(cc.color.GREEN);
+        textField.setTextColor(cc.color.RED);
+
+        textField.addEventListener(this.textFieldEvent, this);
+        this.addChild(textField);
+
+        
+        console.log(size);
+        return true;
+    },
+    textFieldEvent: function (textField, type) {
+        switch (type) {
+            case ccui.TextField.EVENT_ATTACH_WITH_IME: //选中
+                var widgetSize = this.getContentSize();
+                textField.runAction(cc.moveTo(0.225,
+                    cc.p(widgetSize.width / 2, widgetSize.height / 2 + 30)));
+                cc.log("attach with IME");
+                break;
+            case ccui.TextField.EVENT_DETACH_WITH_IME: //不选中
+                var widgetSize = this.getContentSize();
+                textField.runAction(cc.moveTo(0.175, cc.p(widgetSize.width / 2.0, widgetSize.height / 2.0)));
+                cc.log("detach with IME");
+                break;
+            case ccui.TextField.EVENT_INSERT_TEXT: //添加
+                cc.log("insert words");
+                break;
+            case ccui.TextField.EVENT_DELETE_BACKWARD: //删除
+                cc.log("delete word");
+                break;
+            default:
+                break;
+        }
+    }
+   
+});
+
+#进度条
+
+var HelloWorldLayer = cc.Layer.extend({
+    _count:0,
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+        // var loadingBar = new ccui.LoadingBar();
+        // loadingBar.setName("LoadingBar");
+        // loadingBar.loadTexture("res/ccs-res/cocosui/sliderProgress.png");
+        // loadingBar.setPercent(0);
+        // //方向
+        // loadingBar.setDirection(ccui.LoadingBar.TYPE_RIGHT);
+        // loadingBar.x = widgetSize.width / 2;
+        // loadingBar.y = widgetSize.height / 2 + loadingBar.height / 4;
+        // this.addChild(loadingBar);
+        // this._loadingBar = loadingBar;
+
+
+
+        var loadingBar = new ccui.LoadingBar();
+        loadingBar.setName("LoadingBar");
+        loadingBar.setScale9Enabled(true);
+        loadingBar.loadTexture("res/ccs-res/cocosui/slider_bar_active_9patch.png");
+        loadingBar.setCapInsets(cc.rect(0, 0, 0, 0));
+        //设定大小
+        loadingBar.setContentSize(cc.size(300, 30));
+        loadingBar.setPercent(0);
+        loadingBar.x = widgetSize.width / 2;
+        loadingBar.y = widgetSize.height / 2 + loadingBar.height / 4;
+        this.addChild(loadingBar);
+        this._loadingBar = loadingBar;
+
+
+        this.scheduleUpdate(); //开启update 刷新
+
+        console.log(size);
+        return true;
+    },
+
+    update: function (dt) {
+        this._count++;
+        if (this._count > 100) {
+            this._count = 0;
+        }
+
+        this._loadingBar && this._loadingBar.setPercent(this._count);
+    },
+    
+});
+
+#slider
+
+var HelloWorldLayer = cc.Layer.extend({
+    _count:0,
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+        // Create the slider
+        var slider = new ccui.Slider();
+        slider.setTouchEnabled(true);
+        slider.loadBarTexture("res/ccs-res/cocosui/sliderTrack.png");
+        slider.loadSlidBallTextures("res/ccs-res/cocosui/sliderThumb.png", "res/ccs-res/cocosui/sliderThumb.png", "");
+        slider.loadProgressBarTexture("res/ccs-res/cocosui/sliderProgress.png");
+        slider.x = widgetSize.width / 2.0;
+        slider.y = widgetSize.height / 2.0;
+        slider.addEventListener(this.sliderEvent, this);
+        this.addChild(slider);
+
+
+        var slider = new ccui.Slider();
+        slider.setTouchEnabled(true);
+        slider.setScale9Enabled(true);
+        slider.loadBarTexture("res/ccs-res/cocosui/sliderTrack2.png");
+        slider.loadSlidBallTextures("res/ccs-res/cocosui/sliderThumb.png", "res/ccs-res/cocosui/sliderThumb.png", "");
+        slider.loadProgressBarTexture("res/ccs-res/cocosui/slider_bar_active_9patch.png");
+        //缩放
+        slider.setCapInsets(cc.rect(0, 0, 0, 0));
+        slider.setContentSize(cc.size(250, 10));
+        slider.x = widgetSize.width / 2.0;
+        slider.y = widgetSize.height / 2.0-100;
+        slider.addEventListener(this.sliderEvent, this);
+        this.addChild(slider);
+
+
+        // Create the slider
+        var slider = new ccui.Slider();
+        slider.loadBarTexture("res/ccs-res/cocosui/slidbar.png");
+        slider.loadSlidBallTextureNormal("res/ccs-res/cocosui/sliderballnormal.png");
+        slider.setEnabled(false); //禁用
+        slider.setBright(false);
+        slider.setPosition(cc.p(widgetSize.width / 2, widgetSize.height / 2 + 50));
+        this.addChild(slider);
+
+        var sliderScale9 = new ccui.Slider("res/ccs-res/cocosui/slidbar.png", "res/ccs-res/cocosui/sliderballnormal.png");
+        sliderScale9.setScale9Enabled(true);
+        sliderScale9.setEnabled(false);
+        sliderScale9.setBright(false);
+        sliderScale9.setCapInsets(cc.rect(0, 0, 0, 0));
+        sliderScale9.setContentSize(cc.size(250, 10));
+        sliderScale9.setPosition(cc.p(widgetSize.width / 2, widgetSize.height / 2 + 100));
+        this.addChild(sliderScale9);
+
+
+        console.log(size);
+        return true;
+    },
+    sliderEvent: function (sender, type) {
+        switch (type) {
+            case ccui.Slider.EVENT_PERCENT_CHANGED:
+                var slider = sender;
+                var percent = slider.getPercent();
+                cc.log("Percent " + percent.toFixed(0));
+                break;
+            default:
+                break;
+        }
+    }
+   
+    
+});
+
+#text
+
+var HelloWorldLayer = cc.Layer.extend({
+    _count:0,
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+       
+        // // Create the label
+        // var text = new ccui.Text();
+        // text.attr({
+        //     string: "Label",
+        //     font: "30px AmericanTypewriter",
+        //     x: widgetSize.width / 2,
+        //     y: widgetSize.height / 2 + text.height / 2 
+        // });
+        // this.addChild(text);
+
+        // // 换行
+        // var text = new ccui.Text();
+        // text.boundingWidth = 280;
+        // text.boundingHeight = 150;
+        // text.attr({
+        //     textAlign: cc.TEXT_ALIGNMENT_CENTER,
+        //     string: "Label can line wrap",
+        //     font: "32px AmericanTypewriter",
+        //     x: widgetSize.width / 2
+        // });
+        // text.y = widgetSize.height / 2 - text.height / 2 + 200;
+        // this.addChild(text);
+
+        // //换字体
+        // var text = new ccui.Text();
+        // text.boundingWidth = 280;
+        // text.boundingHeight = 150;
+        // text.attr({
+        //     textAlign: cc.TEXT_ALIGNMENT_CENTER,
+        //     string: "Label TTF",
+        //     font: "32px mericanTypewriter",
+        //     x: widgetSize.width / 2,
+        //     y: widgetSize.height / 2 - text.height / 2 - 100
+        // });
+        // this.addChild(text);
+
+        //禁用游览器缓存
+        // Create the LabelBMFont
+        var labelBMFont = new ccui.TextBMFont();
+        labelBMFont.setFntFile(res.bitmapFontTest2);
+        labelBMFont.setString("BMFont");
+        labelBMFont.x = size.width / 2;
+        labelBMFont.y = size.height / 2 + 100;
+        this.addChild(labelBMFont);
+
+        // Create the label atlas
+        // var textAtlas = new ccui.TextAtlas();
+        // textAtlas.setProperty("1234567890", res.labelatlas, 17, 22, "0");
+        // textAtlas.x = size.width / 2;
+        // textAtlas.y = size.height / 2;
+        // this.addChild(textAtlas);
+
+        console.log(size);
+        return true;
+    },
+    
+    
+});
+
+

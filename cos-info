@@ -1,0 +1,159 @@
+tip:
+
+getVisibleSize：获得视口（可视区域）的大小，若是DesignResolutionSize跟屏幕尺寸一样大，则getVisibleSize便是getWinSize。
+getVisibleOrigin：获得可视区域的出发点坐标，在处理相对位置时，确保节点在不同分辨率下的位置一致。
+
+在cocos2d-x里CCNode对象有缩放的方法setScaleX和setScaleY。所以在获取对象大小的时候必须根据情况明确指定获取对象原始大小，还是缩放后的大小。
+getContentSize函数来获得节点原始的大小。只是逻辑尺寸，不是像素
+boundingBox函数来获得经过缩放和旋转之后的外框盒大小。
+getContentSizeInPixels获得的是像素点大小
+P.S.像素点和逻辑点关系：逻辑点大小 = 像素大小/contentScaleFactor. 
+
+
+跟随
+http://lib.csdn.net/article/cocos/13200
+
+var followAction = cc.Follow.create(this.hero, cc.rect(0, 0, 3800, size.height));
+this.runAction(followAction);
+
+
+cocos2d-js 定时器
+1.scheduleUpdate
+
+节点中有scheduleUpdate接口，通过这个接口，可以让游戏在每帧执行都执行update方法
+
+var ScheduleUpdateLayer = cc.Layer.extend({
+    ball:null,
+    ctor:function () {
+        this._super();
+        this.scheduleUpdate(); // 开启定时器
+
+        var winSize = cc.director.getWinSize();
+        var ball = new cc.Sprite("res/item_2.png");
+        ball.x = winSize.width/2;
+        ball.y = winSize.height/2;
+        this.addChild(ball);
+        this.ball = ball;
+
+        cc.eventManager.addListener({ // 监听鼠标事件
+            event:cc.EventListener.MOUSE,
+            onMouseDown:function (event) {
+                var action = cc.moveTo(1,event.getLocation().x,event.getLocation().y);
+                ball.runAction(action);
+            }
+        },this)
+    },
+
+    update : function () { // 重写update方法
+        console.log(this.ball.x+"---"+this.ball.y);
+    }
+})
+
+2. scheduleOnce
+
+scheduleOnce和setTimeout类似，接受两个参数，第一个参数是回调函数，第二个参数是事件，scheduleOnce接受的时间以秒为单位。
+节点都有scheduleOnce接口。
+
+var ScheduleLayer = cc.Layer.extend({
+    ctor:function () {
+        this._super();
+
+        this.scheduleOnce(function () {  // 2秒后打印日志
+           console.log("scheduleOnce");
+        },2);
+    }
+})
+
+3. schedule
+
+schedule和setInterval类似，实现固定时间间隔不断触发某个函数的功能。
+node.schedul(callback, interval, repeat, delay)
+interval触发间隔，以秒为单位
+repeat重复次数，会执行repeat+1次
+delay是第一次出发前的延迟时间，以秒为单位
+如果希望schedule无限循环，可以省略后两个参数，也可以设置repeat为常量cc.REPEATE_FOREVER
+
+this.schedule(function () {
+            console.log("schedule");
+        },2,cc.REPEAT_FOREVER,2);
+
+schedule基于帧数控制，当帧频降低时，schedule会积累大量的误差
+一个平衡的定时器
+
+schedule2:function (callback,interval) {
+        var then = Date.now();
+        interval = interval*1000;
+        this.schedule(function () {
+            var now = Date.now();
+            var delta = now-then;
+            if(delta > interval){
+                then = now - (delta % interval); //如果本次触发延迟了，就让下次触发早一点来抵消误差
+                callback.call(this);
+            }
+        }.bind(this),0); // 0表示每帧触发
+    }
+
+4. 取消定时器
+
+    取消scheduleUpdate ，使用 node.unscheduleUpdate()
+    取消scheduleOnce和schedule，使用node.unschedule()
+
+var ScheduleLayer = cc.Layer.extend({
+    ctor:function () {
+        this._super();
+        this.schedule(this.tick,1,cc.REPEAT_FOREVER,1);
+        this.tickCount = 0;
+    },
+    tick:function () {
+        console.log("tick");
+        this.tickCount++;
+        if(this.tickCount == 5){
+            this.unschedule(this.tick);
+        }
+    }
+})
+
+5.暂停/恢复定时器
+
+node.pause();  //暂停
+node.resume(); //恢复
+
+
+
+
+//不慢的定时器
+var BetterScheduleLayer = cc.Layer.extend({
+
+    ctor: function () {
+        this._super();
+
+        var startTime = Date.now();
+        var count = 0;
+        this.schedule2(function(){
+            var timePass = Date.now() - startTime;
+            count++;
+            var delta = timePass - (count*100);
+            trace("time pass", timePass, "total delta", delta, "count", count);
+        }, 0.1);
+        this.scheduleUpdate();
+    },
+
+    schedule2: function (callback, interval) {
+        var then = Date.now();
+        interval = interval*1000;
+        this.schedule(function(){
+            var now = Date.now();
+            var delta = now - then;
+            if(delta > interval){
+                then = now - (delta % interval);
+                callback.call(this);
+            }
+        }.bind(this), 0);
+    },
+
+    update: function () {
+        for (var i = 0; i < 10000000; i++) {
+            b = 1/0.22222;
+        }
+    }
+});

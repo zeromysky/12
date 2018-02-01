@@ -16,6 +16,8 @@ http://lib.csdn.net/article/cocos/13200
 var followAction = cc.Follow.create(this.hero, cc.rect(0, 0, 3800, size.height));
 this.runAction(followAction);
 
+//黑线
+cc.director.setProjection(cc.Director.PROJECTION_2D);  
 
 cocos2d-js 定时器
 1.scheduleUpdate

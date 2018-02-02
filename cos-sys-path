@@ -1,0 +1,203 @@
+// 颜色
+cc.color(255, 0, 0, 0);
+// 矩形
+cc.rect(0,0, 200, 200)
+// 本地不太重要的数据存储
+var key = 'key_' + Math.random();
+var ls = cc.sys.localStorage;
+
+//设置
+ls.setItem(key, "Hello world");
+
+//获取
+var r = ls.getItem(key);
+cc.log(r);
+
+//删除
+ls.removeItem(key);
+
+//清空
+ls.clear();
+
+//系统支持检查
+var c = cc.sys.capabilities;
+for( var i in c )
+    cc.log( i + " = " + c[i] );
+// out:
+// canvas = true
+// opengl = true
+// mouse = true
+// keyboard = true
+// accelerometer = true
+
+
+
+-----------cc.path.join begin----------
+cc.path.join('a','b.png') ---> a/b.png
+cc.path.join('a','b','c.png') ---> a/b/c.png
+cc.path.join('a','b') ---> a/b
+cc.path.join('a','b','/') ---> a/b/
+cc.path.join('a','b/','/') ---> a/b/
+-----------cc.path.join end------------
+
+-----------cc.path.extname begin----------
+cc.path.extname('a/b.png') ---> .png
+cc.path.extname('a/b.png?a=1&b=2') ---> .png
+cc.path.extname('a/b') ---> null
+cc.path.extname('a/b?a=1&b=2') ---> null
+cc.path.extname('.a/b.png') ---> .png
+cc.path.extname('.a/b.png?a=1&b=2') ---> .png
+cc.path.extname('.a/b') ---> null
+cc.path.extname('.a/b?a=1&b=2') ---> null
+-----------cc.path.extname end------------
+
+-----------cc.path.basename begin----------
+cc.path.basename('a/b.png') ---> b.png
+cc.path.basename('a/b.png?a=1&b=2') ---> b.png
+cc.path.basename('a/b.png','.png') ---> b
+cc.path.basename('a/b.png?a=1&b=2','.png') ---> b
+cc.path.basename('a/b.png','.txt') ---> b.png
+-----------cc.path.basename end------------
+
+-----------cc.path.dirname begin----------
+cc.path.dirname('a/b/c.png') ---> a/b
+cc.path.dirname('a/b/c.png?a=1&b=2') ---> a/b
+-----------cc.path.dirname end------------
+
+-----------cc.path.changeExtname begin----------
+cc.path.changeExtname('a/b.png','.plist') ---> a/b.plist
+cc.path.changeExtname('a/b.png?a=1&b=2','.plist') ---> a/b.plist?a=1&b=2
+-----------cc.path.changeExtname end------------
+
+-----------cc.path.changeBasename begin----------
+cc.path.changeBasename(a/b/c.plist','b.plist') ---> a/b/b.plist
+cc.path.changeBasename(a/b/c.plist?a=1&b=2','b.plist') ---> a/b/b.plist?a=1&b=2
+cc.path.changeBasename(a/b/c.plist','.png') ---> a/b/c.png
+cc.path.changeBasename(a/b/c.plist','b') ---> a/b/b
+cc.path.changeBasename('a/b/c.plist','b',true) ---> a/b/b.plist
+-----------cc.path.changeBasename end------------
+
+
+var HelloWorldLayer = cc.Layer.extend({
+    
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+        // 字体菜单
+        var spriteNormal = new cc.Sprite(res.s_menuItem, cc.rect(0,23*2,115,23));
+        var spriteSelected = new cc.Sprite(res.s_menuItem, cc.rect(0,23,115,23));
+        var spriteDisabled = new cc.Sprite(res.s_menuItem, cc.rect(0,0,115,23));
+
+        var item1 = new cc.MenuItemSprite(spriteNormal, spriteSelected, spriteDisabled, this.onMenuCallback, this);
+
+        // Image Item
+        var sendScoreSF = new cc.SpriteFrame(res.s_sendScore, cc.rect(0, 0, 145, 26));
+        cc.spriteFrameCache.addSpriteFrame(sendScoreSF, "send_score_sf");
+        var item2 = new cc.MenuItemImage("#send_score_sf", res.s_pressSendScore, this.onMenuCallback2, this);
+
+        // Label Item (LabelAtlas)
+        var labelAtlas = new cc.LabelAtlas("0123456789", res.s_fpsImages, 12, 32, '.');
+        var item3 = new cc.MenuItemLabel(labelAtlas, this.onMenuCallbackDisabled, this );
+        item3.setDisabledColor( cc.color(32,32,64) );
+        item3.color = cc.color(200,200,255);
+        cc.log("test MenuItemLabel getString()" + item3.getString());
+
+        // Font Item
+        var item4 = new cc.MenuItemFont("I toggle enable items", function(sender) {
+            this._disabledItem.enabled = !this._disabledItem.enabled;
+        }, this);
+
+        item4.fontSize = 20;
+        item4.fontName = "Arial";
+
+        // Label Item (LabelBMFont)
+        var label = new cc.LabelBMFont("configuration", res.s_bitmapFontTest3_fnt);
+        var item5 = new cc.MenuItemLabel(label, this.onMenuCallbackConfig, this);
+
+        // Testing issue #500
+        item5.scale = 0.8;
+
+        // Events
+        cc.MenuItemFont.setFontName("Arial");
+
+        // Bugs Item
+        var item7 = new cc.MenuItemFont("Bugs", this.onMenuCallbackBugsTest, this);
+
+        // Font Item
+        var item8 = new cc.MenuItemFont("Quit", this.onQuit, this);
+
+        var item9 = new cc.MenuItemFont("Remove menu item when moving", this.onMenuMovingCallback, this);
+
+        var color_action = cc.tintBy(0.5, 0, -255, -255);
+        var color_back = color_action.reverse();
+        var seq = cc.sequence(color_action, color_back);
+        item8.runAction(seq.repeatForever());
+
+        var menu = new cc.Menu( item1, item2, item3, item4, item5, item7, item8, item9);
+        menu.alignItemsVertically();
+
+        // elastic effect
+        var winSize = cc.director.getWinSize();
+
+        // var locChildren = menu.children;
+        // var dstPoint = cc.p(0,0);
+        // for(var i = 0; i < locChildren.length; i++){
+        //     var selChild = locChildren[i];
+        //     if(selChild){
+        //         dstPoint.x = selChild.x;
+        //         dstPoint.y = selChild.y;
+        //         var offset = 0|(winSize.width/2 + 50);
+        //         if( i % 2 == 0)
+        //             offset = -offset;
+
+        //         selChild.x = dstPoint.x + offset;
+        //         selChild.y = dstPoint.y;
+        //         selChild.runAction(cc.moveBy(2, cc.p(dstPoint.x - offset,0)).easing(cc.easeElasticOut(0.35)));
+        //     }
+        // }
+        // this._disabledItem = item3;
+        // this._disabledItem.enabled = false;
+        this.addChild(menu);
+        menu.x = winSize.width/2;
+        menu.y = winSize.height/2;
+
+        return true;
+    },
+    onMenuCallback:function (sender) {
+        
+    },
+
+    onMenuCallbackConfig:function (sender) {
+        
+    },
+
+    onAllowTouches:function (dt) {
+       
+    },
+
+    onMenuCallbackDisabled:function (sender) {
+        
+    },
+
+    onMenuCallback2:function (sender) {
+        
+    },
+
+    onQuit:function (sender) {
+        cc.log("Quit called");
+    },
+
+    onMenuCallbackBugsTest:function(sender){
+       
+    },
+
+    onMenuMovingCallback:function(sender){
+      
+    }
+
+});

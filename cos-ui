@@ -547,3 +547,297 @@ var HelloWorldLayer = cc.Layer.extend({
 });
 
 
+#layout
+
+
+var HelloWorldLayer = cc.Layer.extend({
+    _count:0,
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+        // var widget;
+        // var json = ccs.load(res.UITest);
+        // widget = json.node;
+        // this.addChild(widget,-1);
+
+        // var background = widget.getChildByName("background_Panel");
+        // Create the layout
+        var layout = new ccui.Layout();
+        layout.setContentSize(cc.size(500, 500));
+
+        // layout.setBackGroundColorType(ccui.Layout.BG_COLOR_SOLID);
+        // layout.setBackGroundColor(cc.color(128, 128, 128));
+        // layout.setBackGroundColorType(ccui.Layout.BG_COLOR_GRADIENT);
+        // layout.setBackGroundColor(cc.color(64, 64, 64), cc.color(192, 192, 192));
+
+        // layout.setClippingEnabled(true);
+        // layout.setBackGroundImage("res/ccs-res/cocosui/Hello.png");
+
+        // layout.setBackGroundImageScale9Enabled(true);
+        // layout.setBackGroundImage("res/ccs-res/cocosui/green_edit.png");
+        //布局类别
+        // layout.setLayoutType(ccui.Layout.LINEAR_VERTICAL);
+
+        var layoutRect = layout.getContentSize();
+        layout.x = 0;
+        layout.y = 0;
+        this.addChild(layout);
+
+        this.button = new ccui.Button();
+        this.button.setTouchEnabled(true);
+        this.button.loadTextures("res/ccs-res/cocosui/animationbuttonnormal.png", "res/ccs-res/cocosui/animationbuttonpressed.png", "");
+        this.button.x = this.button.width / 2;
+        this.button.y = layoutRect.height - this.button.height / 2;
+        layout.addChild(this.button);
+
+        this.textButton = new ccui.Button();
+        this.textButton.setTouchEnabled(true);
+        this.textButton.loadTextures("res/ccs-res/cocosui/backtotopnormal.png", "res/ccs-res/cocosui/backtotoppressed.png", "");
+        this.textButton.setTitleText("Text Button");
+        this.textButton.x = layoutRect.width / 2;
+        this.textButton.y = layoutRect.height / 2;
+        layout.addChild(this.textButton);
+
+        this.button_scale9 = new ccui.Button();
+        this.button_scale9.setTouchEnabled(true);
+        this.button_scale9.setScale9Enabled(true);
+        this.button_scale9.loadTextures("res/ccs-res/cocosui/button.png", "res/ccs-res/cocosui/buttonHighlighted.png", "");
+        this.button_scale9.width = 100;
+        this.button_scale9.height = 32;
+        this.button_scale9.x = layoutRect.width - this.button_scale9.width / 2;
+        this.button_scale9.y = this.button_scale9.height / 2;
+        layout.addChild(this.button_scale9);
+
+        // this.setLayoutParameter();
+       
+        console.log(size);
+        return true;
+    },
+    
+    
+});
+
+var HelloWorldScene = cc.Scene.extend({
+    onEnter:function () {
+        this._super();
+        var layer = new HelloWorldLayer();
+        this.addChild(layer);
+    }
+});
+
+
+#pageview
+
+
+var HelloWorldLayer = cc.Layer.extend({
+    _count:0,
+    _spawnCount: 8,
+    _totalCount: 100,
+    _bufferZone: 50,
+    _updateInterval: 0.01,
+    _updateTimer: 0,
+    _lastContentPosY: 0,
+    _reuseItemOffset: 0,
+    _initializeListSize: false,
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+        // var widget;
+        // var json = ccs.load(res.UITest);
+        // widget = json.node;
+        // this.addChild(widget,-1);
+
+        // var background = widget.getChildByName("background_Panel");
+        // var backgroundSize = background.getContentSize();
+
+        // Create the page view
+        var pageView = new ccui.PageView();
+        pageView.setTouchEnabled(true);
+        pageView.setContentSize(cc.size(240, 130));
+        pageView.x = widgetSize.width / 2 - pageView.width / 2;
+        pageView.y = widgetSize.height/ 2 + pageView.height / 2;
+
+        for (var i = 0; i < 3; ++i) {
+            var layout = new ccui.Layout();
+            layout.setContentSize(cc.size(240, 130));
+            var layoutRect = layout.getContentSize();
+
+            var imageView = new ccui.ImageView();
+            imageView.setTouchEnabled(true);
+            imageView.setScale9Enabled(true);
+            imageView.loadTexture("res/ccs-res/cocosui/scrollviewbg.png");
+            imageView.setContentSize(cc.size(240, 130));
+            imageView.x = layoutRect.width / 2;
+            imageView.y = layoutRect.height / 2;
+            layout.addChild(imageView);
+
+            var text = new ccui.Text();
+            text.string = "page" + (i + 1);
+            text.font = "30px 'Marker Felt'";
+            text.color = cc.color(192, 192, 192);
+            text.x = layoutRect.width / 2;
+            text.y = layoutRect.height / 2;
+            layout.addChild(text);
+
+            pageView.addWidgetToPage(layout, i);
+        }
+        pageView.setCurPageIndex(1);
+        pageView.addEventListener(this.pageViewEvent, this);
+
+        //for test purpose only
+        cc.log(pageView.getPages());
+        cc.log(pageView.getPage(0));
+        this.addChild(pageView);
+
+        console.log(size);
+        return true;
+    },
+    pageViewEvent: function (sender, type) {
+        switch (type) {
+            case ccui.PageView.EVENT_TURNING:
+                var pageView = sender;
+                this._topDisplayLabel.setString("page = " + (pageView.getCurPageIndex().valueOf()-0 + 1));
+                break;
+            default:
+                break;
+        }
+    }
+
+});
+
+#imageView
+
+var HelloWorldLayer = cc.Layer.extend({
+    
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+        var imageView = new ccui.ImageView("res/ccs-res/cocosui/ccicon.png");
+        imageView.x = widgetSize.width / 2;
+        imageView.y = widgetSize.height / 2 + imageView.height / 4;
+        this.addChild(imageView);
+
+        var imageView = new ccui.ImageView();
+        imageView.setScale9Enabled(true);
+        imageView.loadTexture("res/ccs-res/cocosui/buttonHighlighted.png");
+        imageView.setContentSize(cc.size(200, 85));
+        imageView.x = widgetSize.width / 2;
+        imageView.y = widgetSize.height / 2 + imageView.getContentSize().height / 4;
+        imageView.setPosition(cc.p(widgetSize.width / 2, widgetSize.height / 2+100));
+        this.addChild(imageView);
+
+        imageView.setTouchEnabled(true);
+        imageView.addTouchEventListener(function(sender, type){
+            if (type == ccui.Widget.TOUCH_ENDED) {
+                console.log(111);
+            }
+        });
+
+      
+        return true;
+    },
+
+
+});
+
+#path
+
+var HelloWorldLayer = cc.Layer.extend({
+    
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+
+        cc.spriteFrameCache.addSpriteFrames("res/ccs-res/cocosui/android9patch.plist");
+    
+        var winSize = size;
+        var x = winSize.width / 2;
+        var y = 0 + (winSize.height / 2 + 50);
+
+        var preferedSize = cc.size(99,99);
+
+        //9-patch sprite with filename
+        var playerSprite = new cc.Scale9Sprite("res/ccs-res/cocosui/player.9.png");
+        playerSprite.setPosition(x, y);
+        playerSprite.setContentSize(preferedSize);
+        var capInsets = playerSprite.getCapInsets();
+        cc.log("player sprite capInset = " + capInsets.x + ", " + capInsets.y + " " + capInsets.width + ", " + capInsets.height);
+        this.addChild(playerSprite);
+
+        var animationBtnSprite = new cc.Scale9Sprite("res/ccs-res/cocosui/animationbuttonpressed.png");
+        animationBtnSprite.setPosition(x-100, y-100);
+        capInsets = animationBtnSprite.getCapInsets();
+        cc.log("animationBtnSprite capInset = " + capInsets.x + ", " + capInsets.y + " " + capInsets.width + ", " + capInsets.height);
+        this.addChild(animationBtnSprite);
+        
+        
+        // var monsterSprite = new cc.Scale9Sprite("res/ccs-res/cocosui/monster.9.png");
+        // monsterSprite.setPosition(x+100, y-100);
+        // capInsets = monsterSprite.getCapInsets();
+        // monsterSprite.setContentSize(preferedSize);
+        // cc.log("monsterSprite capInset = ", + capInsets.x + ", " + capInsets.y + " " + capInsets.width + ", " + capInsets.height);
+        // this.addChild(monsterSprite);
+
+        var spriteFrame = cc.spriteFrameCache.getSpriteFrame("res/ccs-res/cocosui/buttonnormal.9.png");
+        var buttonScale9Sprite = new cc.Scale9Sprite(spriteFrame);
+        buttonScale9Sprite.setContentSize(cc.size(150,80));
+        buttonScale9Sprite.setPosition(cc.p(100,200));
+        this.addChild(buttonScale9Sprite);
+
+
+      
+        return true;
+    },
+
+
+});
+
+#widget
+
+var HelloWorldLayer = cc.Layer.extend({
+    
+    ctor:function () {
+
+        //初始化
+        this._super();
+        //获取屏幕大小
+        var size = cc.winSize; 
+        var widgetSize = this.getContentSize();
+
+
+        // Create the ui node container
+        var nodeContainer = new ccui.Widget();
+        nodeContainer.x = widgetSize.width / 2;
+        nodeContainer.y = widgetSize.height / 2;
+        this.addChild(nodeContainer);
+
+        var sprite = new cc.Sprite("res/ccs-res/cocosui/ccicon.png");
+        sprite.x = 0;
+        sprite.y = sprite.getBoundingBox().height / 4;
+        nodeContainer.addNode(sprite);
+
+        return true;
+    },
+
+
+});

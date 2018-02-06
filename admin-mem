@@ -1,0 +1,296 @@
+<?php
+header("content-type:text/html;charset=utf-8");
+/**
+* memcache key-value管理
+*/
+class MemcacheAdmin
+{	
+	//server链接池
+	public $hostPortArr = array();
+	public $memcache = null;
+	public $allKeys = array();
+	//单列
+    static private $_instance = null;
+    private function __clone(){}
+	private function __construct(){
+		$this->memcache = new Memcache;
+	}
+	static public function getInstance(){
+        if(is_null(self::$_instance)){
+            self::$_instance = new MemcacheAdmin();
+        }
+        return self::$_instance;
+    }
+
+    public function addServer($host,$port){
+    	if(empty($host) || empty($port)) return ;
+    	$this->hostPortArr[] = array('host'=>$host,'port'=>$port);
+    	$this->memcache->addServer($host, $port);
+    }
+
+    public function getHostPort(){
+    	return $this->hostPortArr;
+    }
+    /*获取slabs凹槽*/
+    public function getSlabs(){
+    	$arr = $this->memcache->getExtendedStats('slabs');
+    	$out = array();
+    	foreach ($arr as $key => $value) {
+    		foreach ($value as $k=>$v) {
+    			if(intval($k)>0){
+    				$out[$key][] = intval($k);
+    			}
+    		}	
+    	}
+    	return $out;
+    }
+    /**
+     * 获取凹槽ID中所有keys
+     * @param host_port 127.0.0.1:11211
+     * @param slab_id 凹槽ID getSlabs()获取
+     */
+    public function getKeys($host_port,$slab_id){
+	    $res = $this->memcache->getExtendedStats('cachedump',(int)$slab_id)[$host_port];
+	    $res = array_keys($res);
+	    return $res;
+    }
+
+    /**
+     * 获取所有keys
+     */
+    public function getAllKeys(){
+	    
+		$list = array();
+		$allSlabs = $this->memcache->getExtendedStats('slabs');
+		$items = $this->memcache->getExtendedStats('items');
+		foreach($allSlabs as $server => $slabs) {
+			foreach($slabs AS $slabId => $slabMeta) {
+				$slabId = intval($slabId);
+				if($slabId>0){
+					$cdump = $this->memcache->getExtendedStats('cachedump',(int)$slabId,0);
+					foreach($cdump AS $keys => $arrVal) {
+						foreach($arrVal AS $k => $v) {                   
+							$list[$server][] = $k;
+						}
+					}
+				}
+			}
+		}
+		$this->allKeys = $list;
+		return $this->allKeys;
+    }
+
+    /**
+     * key 搜索
+     */
+    public function searchKeys($search_key){
+    	if(empty($this->allKeys)){
+    		$this->getAllKeys();
+    	}
+    	$out = array();
+    	foreach ($this->allKeys as $key => $value) {
+    		foreach ($value as $vo) {
+    			if(strripos($vo, $search_key)!==false){
+    				$out[] = $vo;
+    			}
+    		}
+    	}
+    	return $out;
+    }
+
+    /**
+     * 获取value
+     */
+    public function get($key){
+    	return $this->memcache->get($key);
+    }
+
+    /**
+     * 反序列化
+     */
+    public function unserialize($var){
+    	return unserialize($var);
+    }
+
+    /**
+     * 序列化
+     */
+    public function serialize($var){
+    	return serialize($var);
+    }
+
+    /**
+     * json 解码
+     */
+    public function json_decode($var){
+    	return json_decode($var,true);
+    }
+
+    /**
+     * json 编码
+     */
+    public function json_encode($var){
+    	return json_encode($var);
+    }
+
+}
+
+
+
+
+
+$MemcacheAdmin = MemcacheAdmin::getInstance();
+$MemcacheAdmin->addServer('127.0.0.1',11211);
+// $arr = $MemcacheAdmin->getHostPort();
+// var_dump($arr);
+// $arr = $MemcacheAdmin->getSlabs();
+// var_dump($arr);
+
+// $host_port = "127.0.0.1:11211";
+// $slab_id = 2;
+// $arr = $MemcacheAdmin->getKeys($host_port,$slab_id);
+// var_dump($arr);
+
+$allKeys = $MemcacheAdmin->getAllKeys();
+// var_dump($arr);
+// $arr = $MemcacheAdmin->get('MKGETRELIEFFLAG22709');
+// var_dump($arr);
+
+
+// $arr = $MemcacheAdmin->unserialize($arr);
+// var_dump($arr);
+
+// $arr = $MemcacheAdmin->searchKeys('r');
+// var_dump($arr);
+
+// $mem->set('str_key',"123456789");
+// $mem->set('num_key',1234);
+// $object2 = new StdClass;
+// $object2->attribute = 'test';
+// $mem->set('obj_key',$object2);
+// $mem->set('arr_key',array('1'));
+ 
+// print_r($mem->get('str_key'));
+// echo '<br/>';
+// print_r($mem->get('num_key'));
+// echo '<br/>';
+// print_r($mem->get('obj_key'));
+// echo '<br/>';
+// print_r($mem->get('arr_key'));
+// echo '<br/>';
+
+
+$do = $_REQUEST['do'];
+$type = $_REQUEST['type'];
+$key = $_REQUEST['key'];
+
+// var_dump($do);
+// var_dump($type);
+// var_dump($key);
+
+switch ($do) {
+	case 'detail':
+		$content = $MemcacheAdmin->get($key);
+		break;
+	default:
+		# code...
+		break;
+}
+
+switch ($type) {
+	case 'json':
+		$content = json_decode($content,true);
+		break;
+	case 'serialize':
+		$content = unserialize($content);
+		break;
+	default:
+		# code...
+		break;
+}
+
+?>
+<!doctype html>
+<html>
+<head>
+<style type="text/css">
+#customers
+  {
+  font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+  /*width:100%;*/
+  border-collapse:collapse;
+
+  }
+
+#customers td, #customers th 
+  {
+  font-size:1em;
+  border:1px solid #98bf21;
+  padding:3px 7px 2px 7px;
+  }
+
+#customers th 
+  {
+  font-size:1.1em;
+  text-align:left;
+  padding-top:5px;
+  padding-bottom:4px;
+  background-color:#A7C942;
+  color:#ffffff;
+  }
+
+#customers tr.alt td 
+  {
+  color:#000000;
+  background-color:#EAF2D3;
+  }
+
+#content{
+	position: absolute;
+	top:15%;
+	left: 30%;
+	
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>memcache管理</h1>
+<table id="customers">
+<tr>
+<th>key</th>
+<th>操作</th>
+</tr>
+<!-- class="alt" -->
+
+<?php foreach ($allKeys as $key => $value) { ?>
+	<?php foreach ($value as $vo) { ?>
+		<?php $voo = $MemcacheAdmin->get($vo) ?>
+		<tr>
+			<td><?=$vo?></td>
+			<td><a href="?do=detail&key=<?=$vo?>&type=<?=$type?>">查看</a></td>
+		</tr>
+	<?php } ?>
+<?php } ?>
+
+</table>
+
+<div id="content">
+	<label>选择展示类别：</label>
+
+		<a href="?do=detail&key=<?=$vo?>&type=string">文本</a> | 
+		<a href="?do=detail&key=<?=$vo?>&type=json">json</a> | 
+		<a href="?do=detail&key=<?=$vo?>&type=serialize">序列化</a> 
+
+	<br>
+	<div style="margin-top:10px;">
+		<textarea style="width:750px;height:500px;"><?=is_string($content)?$content:var_export($content,true)?></textarea>	
+	</div>
+
+</div>
+
+
+</body>
+</html>

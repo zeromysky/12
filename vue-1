@@ -1,0 +1,576 @@
+
+#指令   
+
+1. v-text
+
+作用 ： 操作元素中的纯文本
+
+快捷方式 ： {{}}
+
+
+<h1 id="app1" v-text="'今天是'+year+'年'+month+'月'"></h1>
+等同于：<h1 id="app1">今天是{{year}}年{{month}}月</h1>
+<script type="text/javascript">
+	var app1 = new Vue({
+	  el : "#app1",
+	  data : {
+	    year : new Date().getFullYear(),
+	    month : new Date().getMonth()+1
+	  }
+	});
+</script>
+
+注意：
+
+这里v-text=""，双引号并不是代表字符串，而是vue自定义的划定界限的符号。
+如果我们里边输出字符串，就要在里边再添加一对单引号。而且经测验，要想输出字符串，必须添加单引号，否则会报错
+这里month默认是从0开始的，所以我们要+1
+这里{{}}代表的就是""，所以在v-text=""中，我们在内容里边就不需要再写{{}}了，直接写data值就行
+
+{{}}里边 只有单个语句的可以，像var和if就不可以，如果想使用if语句的话，用三元运算符代替
+
+
+2. v-html
+
+作用 ： 操作元素中的HTML标签
+
+v-text会将元素当成纯文本输出，v-html会将元素当成HTML标签解析后输出
+
+<div id="app3" v-html="message"></div>
+<script type="text/javascript">
+var app3 = new Vue({
+  el : "#app3",
+  data : {
+    message : "![](img/1.jpg)"
+  }
+});
+</script>
+
+3. v-bind
+
+作用 ： 绑定HTML标签属性，：后面是标签属性名
+
+<div id="app2">
+  <span v-bind:title = 'message'>
+    鼠标悬停几秒钟查看此处动态绑定的提示信息！
+  </span>
+</div>
+<script type="text/javascript">
+var app2 = new Vue({
+  el : '#app2',
+  data : {
+    message : '页面加载于' + new Date()
+  }
+})
+</script>
+
+
+4.v-if
+
+判断
+
+<div id="app-3">
+  <p v-if="seen">Now you see me</p>
+	<h1 v-else>No</h1>
+
+	<template v-if="seen">
+	  <h1>Title</h1>
+	  <p>Paragraph 1</p>
+	  <p>Paragraph 2</p>
+	</template>
+
+	<h1 v-show="seen">频繁切换使用</h1> 
+</div>
+
+
+<script type="text/javascript">
+var app3 = new Vue({
+  el: '#app-3',
+  data: {
+    seen: true
+  }
+})
+</script>
+
+
+5.v-for
+
+循环
+
+<div id="app-4">
+  <ol>
+    <li v-for="(item, index) in items">
+      {{ index }} {{ item.text }}
+    </li>
+
+    <template v-for="item in items"> 
+	   <li>{{ item.text }} 多个</li>
+	   <li class="divider"></li>
+	</template>
+  </ol>
+</div>
+
+<script type="text/javascript">
+var app4 = new Vue({
+  el: '#app-4',
+  data: {
+    items: [
+      { text: 'Learn JavaScript' },
+      { text: 'Learn Vue' },
+      { text: 'Build something awesome' }
+    ]
+  }
+})
+</script>
+
+循环组件
+
+<div id="todo-list-example">
+  <input
+    v-model="newTodoText"
+    v-on:keyup.enter="addNewTodo"
+    placeholder="Add a todo"
+  >
+  <ul>
+    <li
+      is="todo-item"
+      v-for="(todo, index) in todos"
+      v-bind:title="todo"
+      v-on:remove="todos.splice(index, 1)"
+    ></li>
+  </ul>
+</div>
+
+<script type="text/javascript">
+	Vue.component('todo-item', {
+	  template: '\
+	    <li>\
+	      {{ title }}\
+	      <button v-on:click="$emit(\'remove\')">X</button>\
+	    </li>\
+	  ',
+	  props: ['title']
+	})
+	new Vue({
+	  el: '#todo-list-example',
+	  data: {
+	    newTodoText: '',
+	    todos: [
+	      'Do the dishes',
+	      'Take out the trash',
+	      'Mow the lawn'
+	    ]
+	  },
+	  methods: {
+	    addNewTodo: function () {
+	      this.todos.push(this.newTodoText)
+	      this.newTodoText = ''
+	    }
+	  }
+	})
+</script>
+
+
+6.v-on
+
+绑定一个监听事件用于调用我们 Vue 实例中定义的方法
+
+<div id="app-5">
+  <p>{{ message }}</p>
+  <button v-on:click="reverseMessage">Reverse Message</button>
+</div>
+
+<script type="text/javascript">
+var app5 = new Vue({
+  el: '#app-5',
+  data: {
+    message: 'Hello Vue.js!'
+  },
+  methods: {
+    reverseMessage: function () {
+      this.message = this.message.split('').reverse().join('')
+    }
+  }
+})
+</script>
+
+---
+
+<div id="example-1">
+  <button v-on:click="counter += 1">增加 1</button>
+  <p>这个按钮被点击了 {{ counter }} 次。</p>
+</div>
+
+<script type="text/javascript">
+	var example1 = new Vue({
+	  el: '#example-1',
+	  data: {
+	    counter: 0
+	  }
+	})
+</script>
+
+---
+
+<div id="example-3">
+  <button v-on:click="say('hi')">Say hi</button>
+  <button v-on:click="say('what')">Say what</button>
+</div>
+
+<script type="text/javascript">
+	new Vue({
+	  el: '#example-3',
+	  methods: {
+	    say: function (message) {
+	      alert(message)
+	    }
+	  }
+	})
+</script>
+
+
+7.v-model 
+
+表单输入和应用状态中做双向数据绑定
+
+<div id="app-6">
+  <p>{{ message }}</p>
+  <input v-model="message">
+</div>
+
+<script type="text/javascript">
+var app6 = new Vue({
+  el: '#app-6',
+  data: {
+    message: 'Hello Vue!'
+  }
+})
+</script>
+
+
+8.自定义组件
+
+<div id="app-7">
+  <ol>
+    <todo-item v-for="item in groceryList"  v-bind:name="item"></todo-item>
+  </ol>
+</div>
+
+<script type="text/javascript">
+
+Vue.component('todo-item', {
+  props: ['name'], //模板中使用的变量
+  template: '<li>{{ name.text }}</li>'
+})
+
+var app7 = new Vue({
+  el: '#app-7',
+  data: {
+    groceryList: [
+      { text: 'Vegetables' },
+      { text: 'Cheese' },
+      { text: 'Whatever else humans are supposed to eat' }
+    ]
+  }
+})
+</script>
+
+9.生命周期，相关执行钩子
+
+<div id='example'>{{a}}</div>
+
+<script type="text/javascript">
+
+	var data = { a: 1 }
+	var vm = new Vue({
+	  el: '#example',
+	  data: data,
+	  //创建前调用
+	  beforeCreate:function(){
+	  	console.log(1)
+	  },
+	  //创建时调用
+	  created: function () {
+	    // `this` 指向 vm 实例
+	    console.log('a is: ' + this.a)
+	    console.log(2)
+	  },
+	})
+
+	// vm.a === data.a // -> true
+	// // 设置属性也会影响到原始数据
+	// vm.a = 2
+	// data.a // -> 2
+	// // ... 反之亦然
+	// data.a = 3
+	// vm.a // -> 3
+
+	// vm.$data === data // -> true
+	// vm.$el === document.getElementById('example') // -> true
+	// // $watch 是一个实例方法
+	// vm.$watch('a', function (newVal, oldVal) {
+	//   // 这个回调将在 `vm.a`  改变后调用
+	// })]
+
+</script>
+
+
+10.过滤器，管道
+
+<div id='example'>{{ message | capitalize | other }}</div>
+
+
+<script type="text/javascript">
+
+	var data = { message: 'abcdefsdfasdf' }
+	var vm = new Vue({
+	  	el: '#example',
+	  	data: data,
+	    filters: {
+		    capitalize: function (value) {
+		      if (!value) return ''
+		      value = value.toString()
+		      return value.charAt(0).toUpperCase() + value.slice(1)
+		    }
+		}
+	})
+
+</script>
+
+11.缩写
+
+v-bind
+
+<!-- 完整语法 -->
+<a v-bind:href="url"></a>
+<!-- 缩写 -->
+<a :href="url"></a>
+
+v-on
+
+<!-- 完整语法 -->
+<a v-on:click="doSomething"></a>
+<!-- 缩写 -->
+<a @click="doSomething"></a>
+
+
+12.显示字段过滤
+
+有依赖缓存  ： 例如 this.message 改变时 重新熏染
+method : 没有缓存，每次渲染都重新算
+
+<div id="example">
+  <p>Original message: "{{ message }}"</p>
+  <p>Computed reversed message: "{{ reversedMessage }}"</p>
+</div>
+
+
+<script type="text/javascript">
+
+var vm = new Vue({
+  el: '#example',
+  data: {
+    message: 'Hello'
+  },
+  computed: {
+    // a computed getter
+    reversedMessage: function () {  //当作属性使用
+      // `this` points to the vm instance
+      return this.message.split('').reverse().join('')
+    }
+  }
+})
+
+</script>
+
+13.观察 Vue 实例上的数据变动
+
+<div id="demo">{{ fullName }}</div>
+
+<script type="text/javascript">
+
+var vm = new Vue({
+  el: '#demo',
+  data: {
+    firstName: 'Foo',
+    lastName: 'Bar',
+    fullName: 'Foo Bar'
+  },
+  watch: {
+    firstName: function (val) {
+      this.fullName = val + ' ' + this.lastName
+    },
+    lastName: function (val) {
+      this.fullName = this.firstName + ' ' + val
+    }
+  }
+})
+</script>
+
+14.setter
+
+<div id="demo">{{ fullName }}</div>
+
+<script type="text/javascript">
+
+var vm = new Vue({
+  el: '#demo',
+  data: {
+    firstName: 'Foo',
+    lastName: 'Bar'
+  },
+  computed: {
+	  fullName: {
+	    // getter
+	    get: function () {  //显示时 自动调用
+	      return this.firstName + ' ' + this.lastName
+	    },
+	    // setter
+	    set: function (newValue) { //赋值时 自动调用
+	      var names = newValue.split(' ')
+	      this.firstName = names[0]
+	      this.lastName = names[names.length - 1]
+	    }
+	  }
+	}
+})
+</script>
+
+15.class
+
+<style>
+	.active{color: red}
+</style>
+
+<div id="demo" v-bind:class="classObject">
+	asdfasdfasdf
+</div>
+
+<script type="text/javascript">
+
+var vm = new Vue({
+	el: '#demo',
+	data: {
+		isActive: true,
+	},
+	computed: {
+	  	classObject: function () {
+	    return {
+	      active: this.isActive && !this.error,
+	    }
+	}
+}
+})
+</script>
+
+
+数组
+
+<style>
+	.active{color: red}
+	.text-danger{font-size: 58px}
+</style>
+
+<div id="demo" v-bind:class="[activeClass, errorClass]">fasdfasf</div>
+
+<script type="text/javascript">
+
+var vm = new Vue({
+	el: '#demo',
+	data: {
+	  activeClass: 'active',
+	  errorClass: 'text-danger'
+	},
+});
+</script>
+
+
+16.style
+
+<div id="demo" v-bind:style="styleObject">fasdfasf</div>
+
+<script type="text/javascript">
+
+var vm = new Vue({
+	el: '#demo',
+	data: {
+	  styleObject: {
+	    color: 'red',
+	    fontSize: '13px'
+	  }
+	}
+});
+</script>
+
+数组
+
+<div id="demo" v-bind:style="[styleObject, overridingStyles]">fasdfasf</div>
+
+<script type="text/javascript">
+
+var vm = new Vue({
+	el: '#demo',
+	data: {
+	  styleObject: {
+	    color: 'red',
+	    fontSize: '13px'
+	  },
+	  overridingStyles:{
+	  	color:"green"
+	  }
+	}
+});
+</script>
+
+
+17.按键修饰符,事件修饰符
+
+<div id="example-1">
+  <!-- 只有在 keyCode 是 13 时调用 vm.submit() -->
+	<!-- <input v-on:keyup.13="submit"> -->
+	<input v-model="counter" bing- v-on:keyup.enter="submit">
+
+	<!-- 阻止单击事件冒泡 -->
+	<a v-on:click.stop="doThis"></a>
+	<!-- 提交事件不再重载页面 -->
+	<form v-on:submit.prevent="onSubmit"></form>
+	<!-- 修饰符可以串联  -->
+	<a v-on:click.stop.prevent="doThat"></a>
+	<!-- 只有修饰符 -->
+	<form v-on:submit.prevent></form>
+	<!-- 添加事件侦听器时使用事件捕获模式 -->
+	<div v-on:click.capture="doThis">...</div>
+	<!-- 只当事件在该元素本身（而不是子元素）触发时触发回调 -->
+	<div v-on:click.self="doThat">...</div>
+
+	<!-- click 事件只能点击一次，2.1.4版本新增 -->
+	<a v-on:click.once="doThis"></a>
+
+</div>
+
+<script type="text/javascript">
+	var example1 = new Vue({
+	  el: '#example-1',
+	  data: {
+	    counter: 0
+	  },
+	  methods: {
+	    submit: function (e) {
+	    	console.log(e)
+	      console.log(this.counter)
+	    }
+	  }
+
+	})
+</script>
+
+
+18.修饰符
+
+<!-- 在 "change" 而不是 "input" 事件中更新 -->
+<input v-model.lazy="msg" >
+
+<input v-model.number="age" type="number">
+
+<input v-model.trim="msg">
+

@@ -136,48 +136,10 @@ class MemcacheAdmin
 }
 
 
-
-
-
 $MemcacheAdmin = MemcacheAdmin::getInstance();
 $MemcacheAdmin->addServer('127.0.0.1',11211);
-// $arr = $MemcacheAdmin->getHostPort();
-// var_dump($arr);
-// $arr = $MemcacheAdmin->getSlabs();
-// var_dump($arr);
-
-// $host_port = "127.0.0.1:11211";
-// $slab_id = 2;
-// $arr = $MemcacheAdmin->getKeys($host_port,$slab_id);
-// var_dump($arr);
 
 $allKeys = $MemcacheAdmin->getAllKeys();
-// var_dump($arr);
-// $arr = $MemcacheAdmin->get('MKGETRELIEFFLAG22709');
-// var_dump($arr);
-
-
-// $arr = $MemcacheAdmin->unserialize($arr);
-// var_dump($arr);
-
-// $arr = $MemcacheAdmin->searchKeys('r');
-// var_dump($arr);
-
-// $mem->set('str_key',"123456789");
-// $mem->set('num_key',1234);
-// $object2 = new StdClass;
-// $object2->attribute = 'test';
-// $mem->set('obj_key',$object2);
-// $mem->set('arr_key',array('1'));
- 
-// print_r($mem->get('str_key'));
-// echo '<br/>';
-// print_r($mem->get('num_key'));
-// echo '<br/>';
-// print_r($mem->get('obj_key'));
-// echo '<br/>';
-// print_r($mem->get('arr_key'));
-// echo '<br/>';
 
 
 $do = $_REQUEST['do'];
@@ -189,7 +151,7 @@ $key = $_REQUEST['key'];
 // var_dump($key);
 
 switch ($do) {
-	case 'detail':
+	case 'string':
 		$content = $MemcacheAdmin->get($key);
 		break;
 	default:
@@ -197,6 +159,7 @@ switch ($do) {
 		break;
 }
 
+//上一次查看的类别
 switch ($type) {
 	case 'json':
 		$content = json_decode($content,true);
@@ -245,19 +208,33 @@ switch ($type) {
   background-color:#EAF2D3;
   }
 
-#content{
-	position: absolute;
-	top:15%;
-	left: 30%;
-	
-}
-
 </style>
 </head>
 
 <body>
 
 <h1>memcache管理</h1>
+
+<div id="content">
+  <label>选择展示类别：</label>
+
+    <a href="?do=string&key=<?=$vo?>&type=string">文本</a> | 
+    <a href="?do=string&key=<?=$vo?>&type=json">json</a> | 
+    <a href="?do=string&key=<?=$vo?>&type=serialize">序列化</a> 
+
+  <br>
+  <div style="margin-top:10px;">
+    <textarea style="width:750px;height:500px;"><?php
+        if(is_array($content)){
+          echo var_export($content,true);
+        }else{
+          echo $content;
+        }
+      ?></textarea> 
+  </div>
+
+</div>
+<br>
 <table id="customers">
 <tr>
 <th>key</th>
@@ -270,26 +247,14 @@ switch ($type) {
 		<?php $voo = $MemcacheAdmin->get($vo) ?>
 		<tr>
 			<td><?=$vo?></td>
-			<td><a href="?do=detail&key=<?=$vo?>&type=<?=$type?>">查看</a></td>
+			<td><a href="?do=string&key=<?=$vo?>&type=<?=$type?>">查看</a></td>
 		</tr>
 	<?php } ?>
 <?php } ?>
 
 </table>
 
-<div id="content">
-	<label>选择展示类别：</label>
 
-		<a href="?do=detail&key=<?=$vo?>&type=string">文本</a> | 
-		<a href="?do=detail&key=<?=$vo?>&type=json">json</a> | 
-		<a href="?do=detail&key=<?=$vo?>&type=serialize">序列化</a> 
-
-	<br>
-	<div style="margin-top:10px;">
-		<textarea style="width:750px;height:500px;"><?=is_string($content)?$content:var_export($content,true)?></textarea>	
-	</div>
-
-</div>
 
 
 </body>

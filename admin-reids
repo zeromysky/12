@@ -1,0 +1,311 @@
+<?php
+/**
+ * redis 管理
+ */
+header("content-type:text/html;charset=utf-8");
+class redisAdmin{
+
+	public $redis = null;
+	public $type_string_arr = array(
+		Redis::REDIS_STRING=>'string',
+		Redis::REDIS_SET=>'set',
+		Redis::REDIS_LIST=>'list',
+		Redis::REDIS_ZSET=>'zset',
+		Redis::REDIS_HASH=>'hash',
+		Redis::REDIS_NOT_FOUND=>'other',
+	);
+
+
+	//单列
+    static private $_instance = null;
+    private function __clone(){}
+	private function __construct(){
+		 $this->redis = new Redis();
+	}
+	static public function getInstance(){
+        if(is_null(self::$_instance)){
+            self::$_instance = new redisAdmin();
+        }
+        return self::$_instance;
+    }
+    //链接
+    public function connect($host,$port,$pass=false){
+    	$this->redis->connect($host, $port,1);
+        $pass && $this->redis->auth($pass);
+    }
+    //服务欺信息
+    public function info(){
+    	return $this->redis->info();
+    }
+    /*获取使用的数据库*/
+    public function getDbs(){
+    	$info = $this->info();
+    	$dbs = array();
+    	foreach ($info as $key => $value) {
+    		$db_num = str_replace('db', '', $key);
+    		if(is_numeric($db_num)){
+    			$dbs[$key] = $value; 
+    		}
+    	}
+    	return $dbs;
+    }
+    /*选择数据库*/
+    public function select($db_num){
+    	$this->redis->select($db_num);
+    }
+    /*搜索keys*/
+    public function searchKeys($str='*'){
+    	return $this->redis->keys($str);
+    }
+    /*key的类型*/
+    public function getKeyType($key){
+    	return $this->type_string_arr[$this->redis->type($key)];
+    }
+
+
+   	/**
+     * 设置单个
+     * @param name string key
+     * @param value string value
+     * @param time int 过期时间
+     */
+    public function set($name,$value,$time=0){
+        if($time){
+            return $this->redis->setex($name, $time, $value);
+        }else{
+            return $this->redis->set($name, $value);
+        }
+    }
+ 
+    /**
+     * 设置单个 是否有这个KEY，如果没有就SET，有就返回False。
+     * @param name string key
+     * @param value string value
+     * @param time int 过期时间
+     */
+    public function setnx($name,$value){
+        return $this->redis->setnx($name,$value);
+    }
+ 
+    /**
+     * 获取单个 
+     * @param name string key
+     */
+    public function get($name){
+        return $this->redis->get($name);
+    }
+
+    /**
+    * 查看列表
+    */
+    public function lRange($key,$start=0,$end=-1){
+        return $this->redis->lRange($key, $start, $end);
+    }
+
+    /**
+     * 返回所有元素 集合
+     */
+    public function sMembers($key){
+        return $this->redis->sMembers($key);
+    }
+
+    /**
+     * 查看 score 由小到大
+     */
+    public function zRange($key,$start=0,$end=-1){
+        return $this->redis->zRange($key,$start,$end);
+    }
+  
+    /**
+     * 获取所有 哈希
+     */
+    public function hGetAll($key){
+        return $this->redis->hGetAll($key);
+    }
+}
+// echo "<pre>";
+$host = '127.0.0.1';
+$port = '6379';
+// $host = '192.168.1.158';
+// $port = '6802';
+// $pass = '123456';
+
+$redis_admin = redisAdmin::getInstance();
+$redis_admin->connect($host,$port,$pass);
+$info = $redis_admin->info();
+// var_dump($info);
+
+$dbs = $redis_admin->getDbs();
+// var_dump($dbs);
+$db_num = $_REQUEST['db'] ? $_REQUEST['db'] : "0";
+$redis_admin->select($db_num);
+
+// for ($i=0; $i < 100 ; $i++) { 
+// 	$redis_admin->set('asd'.$i,$i);
+// }
+
+// $data = array('user'=>1,'name'=>'测试');
+// $redis_admin->set('abc1',json_encode($data));
+// $redis_admin->set('abc2',serialize($data));
+
+$search_key = $_REQUEST['search_key'] ? $_REQUEST['search_key'] : "*";
+$keyArr = $redis_admin->searchKeys($search_key);
+
+
+
+$do = $_REQUEST['do'];
+$type = $_REQUEST['type'];
+$key = $_REQUEST['key'];
+
+switch ($do) {
+  case 'string':
+    $content = $redis_admin->get($key);
+    break;
+  case 'list':
+    $content = $redis_admin->lRange($key);
+    break;
+  case 'set':
+    $content = $redis_admin->sMembers($key);
+    break;
+  case 'zset':
+    $content = $redis_admin->zRange($key);
+    break; 
+  case 'hash':
+    $content = $redis_admin->hGetAll($key);
+    break;
+  default:
+    # code...
+    break;
+}
+
+
+switch ($type) {
+  case 'json':
+    $content = json_decode($content,true);
+    break;
+  case 'serialize':
+    $content = unserialize($content);
+    break;
+  case 'list':
+    break;
+  case 'set':
+    break;
+  case 'zset':
+    break;
+  case 'hash':
+    break;
+  default:
+    # code...
+    break;
+}
+
+?>
+
+<!doctype html>
+<html>
+<head>
+<style type="text/css">
+#customers
+  {
+  font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+  /*width:100%;*/
+  border-collapse:collapse;
+
+  }
+
+#customers td, #customers th 
+  {
+  font-size:1em;
+  border:1px solid #98bf21;
+  padding:3px 7px 2px 7px;
+  }
+
+#customers th 
+  {
+  font-size:1.1em;
+  text-align:left;
+  padding-top:5px;
+  padding-bottom:4px;
+  background-color:#A7C942;
+  color:#ffffff;
+  }
+
+#customers tr.alt td 
+  {
+  color:#000000;
+  background-color:#EAF2D3;
+  }
+
+</style>
+</head>
+
+<body>
+
+<h1>redis管理</h1>
+
+		
+<div id="content">
+
+    <span>显示类别：</span>
+    <a href="?do=<?=$do?>&key=<?=$key?>&type=string&search_key=<?=$search_key?>">文本</a> | 
+    <a href="?do=<?=$do?>&key=<?=$key?>&type=json&search_key=<?=$search_key?>">json</a> | 
+    <a href="?do=<?=$do?>&key=<?=$key?>&type=serialize&search_key=<?=$search_key?>">序列化</a> | 
+    <a href="?do=<?=$do?>&key=<?=$key?>&type=list&search_key=<?=$search_key?>">列表</a> | 
+    <a href="?do=<?=$do?>&key=<?=$key?>&type=set&search_key=<?=$search_key?>">集合</a> | 
+    <a href="?do=<?=$do?>&key=<?=$key?>&type=zset&search_key=<?=$search_key?>">有序集合</a> | 
+    <a href="?do=<?=$do?>&key=<?=$key?>&type=hash&search_key=<?=$search_key?>">哈希</a> | 
+  
+  <div style="margin-top:10px;">
+    <?php if($key){ ?>
+    <div>key：<?=$key?></div>
+    <?php } ?>
+    <textarea style="width:750px;height:500px;"><?php
+        if(is_array($content)){
+          echo var_export($content,true);
+        }else{
+          echo $content;
+        }
+      ?></textarea>  
+  </div>
+</div>
+
+<br>
+
+<div>
+  <form action="">
+    Key搜索：<input type="text" name='search_key' value="<?=$search_key?>">
+    <input type="submit" value="提交">
+  </form>
+  <br>
+</div>
+
+<table id="customers">
+<tr>
+<td>选择数据库：</td>
+<td colspan='2'><?php foreach ($dbs as $db => $db_vo) {?>
+		<a href="?db=<?=str_replace('db', '', $db)?>"><?=$db?></a> &nbsp;
+	<?php } ?></td>
+</tr>
+<tr>
+<th>key</th>
+<th>类别</th>
+<th>操作</th>
+</tr>
+
+<?php foreach ($keyArr as $_key) { ?>
+	<?php $key_type = $redis_admin->getKeyType($_key); ?>
+		
+		<tr>
+			<td><?=$_key?></td>
+			<td><?=$key_type?></td>
+			<td><a href="?do=<?=$key_type?>&key=<?=$_key?>&type=<?=$type?>&search_key=<?=$search_key?>">查看</a></td>
+		</tr>
+	
+<?php } ?>
+
+</table>
+
+
+
+</body>
+</html>

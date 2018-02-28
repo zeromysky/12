@@ -1,0 +1,58 @@
+// https://www.cnblogs.com/lurensang/p/6627093.html
+
+var BaseRole = cc.Sprite.extend({
+    _role_arr:[],
+    ctor:function(){
+        this._super();
+        this._role_arr.push(this);
+    }
+});
+
+function Role(name,x,y){
+    BaseRole.call(this);
+    this.name = name;
+    var texture = cc.textureCache.addImage(res.s_pressSendScore);  
+    this.setTexture(texture);
+    this.setPosition(x, y);
+    this.play = function(){
+        cc.log(this.name+' play ');
+    }
+}
+
+function Player(name,x,y){
+    this.role = new Role(name,x,y);
+    self = this.role;
+    self.name = "123"+name;
+    return this.role;
+}
+
+/*使用原型方法*/
+(function(){
+  var Super = function(){};
+  Super.prototype = BaseRole.prototype;
+  Role.prototype = new Super();
+})();
+
+
+
+
+var HelloWorldLayer = cc.Layer.extend({
+    
+    ctor:function () {
+        //初始化
+        this._super();
+        var player1 = new Player('player1',100,200);
+        var player2 = new Player('player2',300,400);
+        cc.log(player1.name);
+        cc.log(player2.name);
+        player1.play();
+        player2.play();
+        cc.log(player1._role_arr);
+        cc.log(player2._role_arr);
+        this.addChild(player1);
+        this.addChild(player2);
+        return true;
+    },
+   
+
+});

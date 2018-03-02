@@ -4,7 +4,7 @@ var maskLayer = cc.LayerColor.extend({
     this._super();
     var touchListener = {
       event: cc.EventListener.TOUCH_ONE_BY_ONE,
-      swallowTouches: false,
+      swallowTouches: true,//吞噬 ,不往下传
       onTouchBegan: this.onTouchBegan
     };
     cc.eventManager.addListener(touchListener, this);

@@ -1,0 +1,30 @@
+var maskLayer = cc.LayerColor.extend({
+  m_touchListener:null,
+  ctor:function(){
+    this._super();
+    var touchListener = {
+      event: cc.EventListener.TOUCH_ONE_BY_ONE,
+      swallowTouches: false,
+      onTouchBegan: this.onTouchBegan
+    };
+    cc.eventManager.addListener(touchListener, this);
+    this.m_touchListener = touchListener;
+  },
+  isTouchInside: function (owner,touch) {
+    if(!owner || !owner.getParent()){
+      return false;
+    }
+    var touchLocation = touch.getLocation(); // Get the touch position
+    touchLocation = owner.getParent().convertToNodeSpace(touchLocation);
+    return cc.rectContainsPoint(owner.getBoundingBox(), touchLocation);
+  },
+  onTouchBegan:function(touch, event) {
+    var target = event.getCurrentTarget();
+    
+    if(!target.isVisible() || (!target.isTouchInside(target,touch))){
+      return false;
+    }
+    cc.log('mask');
+    return true;
+  }
+});

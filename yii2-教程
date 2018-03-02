@@ -1,0 +1,116 @@
+-yii2
+
+1.文件安装   http://blog.51cto.com/8214640/1626539
+
+yii down http://www.yiiframework.com/download/
+
+a. basic application template
+b. advanced application template
+
+-advanced 管理后台
+
+advanced\init.bat  点击运行 
+
+0 开发环境
+1 生产环境
+
+advanced\common\config\main-local.php 配置数据库
+
+advanced\yii.bat 放到命令行下 运行 自动生成用户表
+advanced\yii.bat migrate
+
+访问 
+
+http://127.0.0.1/path/advanced/frontend/web/index.php 前台  注册用户
+http://127.0.0.1/path/advanced/backend/web/index.php  后台
+
+-basic 前台
+
+数据库 自带的用 advanced 里生成的
+
+basic\config\web.php  
+
+填写 cookieValidationKey 
+
+2.gii 代码生成
+
+advanced\backend\config\main-local.php 
+
+$config['modules']['gii'] = [
+    'class' => 'yii\gii\Module',
+    'allowedIPs' => ['127.0.0.1', '::1'],
+    //自定义crud的模板
+    'generators' => [
+        'crud' => [ //生成器名称
+            'class' => 'yii\gii\generators\crud\Generator',
+            'templates' => [ //设置我们自己的模板
+                //模板名 => 模板路径
+                'myCrud' => '@backend/views/crud',
+            ]
+        ]
+    ],
+
+];
+
+
+3.主题配置
+
+'components' => [
+    'view' => [
+        'theme' => [
+            'pathMap' => ['@backend/views' => '@backend/themes/blog/views'],//文件
+            'baseUrl' => '@web/themes/blog', //样式
+        ],
+    ],
+],
+
+
+
+
+预定义的别名
+
+Yii 预定义了一系列别名来简化常用路径和 URL 的使用：
+
+@yii，BaseYii.php 文件所在的目录（也被称为框架安装目录）。
+@app，当前运行的应用 yii\base\Application::basePath。
+@runtime，当前运行的应用的 yii\base\Application::runtimePath。默认为 @app/runtime。
+@webroot，当前运行的Web应用程序的Web根目录。 它是根据包含 入口脚本 的目录确定的。
+@web，当前运行的Web应用程序的 base URL。它的值与 yii\web\Request::baseUrl 相同。
+@vendor，yii\base\Application::vendorPath。
+@bower，包含 bower 包 的根目录。默认为 @vendor/bower。
+@npm，包含 npm 包 的根目录。默认为 @vendor/npm。
+
+
+4.资源
+
+class AppAsset extends AssetBundle
+{
+    public $basePath = '@webroot';
+    public $baseUrl = '@web'; //backend/web
+    public $css = [
+        'css/site.css',
+        'css/test.css',
+    ];
+    public $js = [
+        'js/common.js'
+    ];
+    // css js 依赖的
+    public $depends = [ 
+        'yii\web\YiiAsset',
+        'yii\bootstrap\BootstrapAsset',
+    ];
+}
+
+
+view  
+动态加入资源
+//depends 依赖类   
+$this->registerCssFile("@web/css/test.css",['depends'=>AppAsset::className()]);
+$this->registerJsFile("@web/js/common.js",['depends'=>AppAsset::className()]);
+
+registerCssFile => $css
+registerJsFile  => $js
+
+5.activeForm 
+
+http://www.yii-china.com/post/detail/297.html

@@ -86,21 +86,73 @@ Yii 预定义了一系列别名来简化常用路径和 URL 的使用：
 class AppAsset extends AssetBundle
 {
     public $basePath = '@webroot';
-    public $baseUrl = '@web'; //backend/web
+    public $baseUrl = '@web';
+    /*头部样式*/
     public $css = [
-        'css/site.css',
-        'css/test.css',
+        'ace_assets/css/bootstrap.css',
+        'ace_components/font-awesome/css/font-awesome.css',
+        'ace_assets/css/ace-fonts.css',
+        'ace_assets/css/ace.css',
+        'ace_assets/css/ace-skins.css',
+        'ace_assets/css/ace-rtl.css',
+
     ];
+    /*尾部js*/
     public $js = [
-        'js/common.js'
+        'ace_assets/js/ace-extra.js',
+
     ];
-    // css js 依赖的
-    public $depends = [ 
-        'yii\web\YiiAsset',
-        'yii\bootstrap\BootstrapAsset',
+    public $depends = [
+        
     ];
+
+    //定义按需加载JS方法，注意加载顺序在最后  
+    public static function addScript($view, $jsfile) {  
+        $view->registerJsFile($jsfile, ['depends' => AppAsset::className()]);  
+    }  
+      
+    //定义按需加载css方法，注意加载顺序在最后  
+    public static function addCss($view, $cssfile) {  
+        $view->registerCssFile($cssfile, ['depends' => AppAsset::className() ]);  
+    }  
+
+    public static function getBaseUrl(){
+        return yii::getAlias("@web");
+    }
 }
 
+4.2  去掉 yii2 自带的bootstrap,jquery,yii.js http://www.yiichina.com/tutorial/1323
+在 components 配置中加入
+'assetManager' => [
+    'bundles' => [
+        'yii\bootstrap\BootstrapAsset' => [
+             'css' => [],  // 去除 bootstrap.css
+             'sourcePath' => null, // 防止在 web/asset 下生产文件
+        ],
+        'yii\bootstrap\BootstrapPluginAsset' => [
+             'js' => [],  // 去除 bootstrap.js
+             'sourcePath' => null,  // 防止在 web/asset 下生产文件
+        ],
+        'yii\web\JqueryAsset' => [
+            'js' => [],  // 去除 jquery.js
+            'sourcePath' => null,  // 防止在 web/asset 下生产文件
+        ],
+        'yii\web\YiiAsset' => [
+             'js' => [],  // 去除 yii.js
+             'sourcePath' => null,  // 防止在 web/asset 下生产文件
+        ],
+                        
+        'yii\widgets\ActiveFormAsset' => [
+             'js' => [],  // 去除 yii.activeForm.js
+             'sourcePath' => null,  // 防止在 web/asset 下生产文件
+        ],
+
+        'yii\validators\ValidationAsset' => [
+             'js' => [],  // 去除 yii.validation.js
+             'sourcePath' => null,  // 防止在 web/asset 下生产文件
+        ],
+    ],
+],
 
 view  
 动态加入资源

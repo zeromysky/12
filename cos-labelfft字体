@@ -1,0 +1,10 @@
+模糊：大小改为25 ，就好了
+
+自定义字体
+g_resources.push({
+    type:"font",
+    name:"FZHei",
+    srcs:['res/fonts/glyphicons-halflings-regular.ttf']
+})
+
+var labTest = new cc.LabelTTF("网上有关cocos2d引擎字体。", "FZHei", 25);

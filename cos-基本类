@@ -1,0 +1,241 @@
+
+//取消update
+this.unscheduleUpdate();
+//删除自己
+this.removeFromParent();
+
+//对象池
+
+删除时  cc.pool.puInPool(this)
+
+创建时
+if(cc.pool.hasObject(Ball)){
+	return cc.pool.getFromPool(Ball)
+}else{
+	return new Ball()
+}
+重新使用
+reuse:function(){
+	this.y = 0;
+	this.scheduleUpdate()
+}
+
+BaseLayer.js:
+
+var BaseLayer=cc.Layer.extend({
+    _bgFrame:null,
+    _oktouch:false,
+    _showbg:false,
+    _showbgAcion:false,
+    ctor:function(){
+        this._super();
+        /*渲染一个背景层，默认为黑色的半透明的*/
+        if(this._showbg==true)
+        {
+            /*背景*/
+            var bgFrame = cc.LayerColor(cc.color(0,0,0,200));
+            this.addChild(bgFrame,0);
+            this._bgFrame=bgFrame;
+            this.setAnchorPoint(cc.p(0.5,0.5));
+            /*设置当前层里面所有节点的描点也和该层相同*/
+            this.ignoreAnchorPointForPosition(false);
+            this.setContentSize(winSize);
+            this.setPosition(cc.p(winSize.width/2,winSize.height/2));
+        }
+        /*开启底层不可点击触摸（层以下的UI都不可被点击）*/
+        if(this._oktouch==true)
+        {
+            /*点击时间*/
+            cc.eventManager.addListener({
+                event: cc.EventListener.TOUCH_ONE_BY_ONE,
+                swallowTouches: true,
+                onTouchBegan: function(){
+
+                    return true;
+                }
+            }, this);
+        }
+        /*开启打开窗体是带的特效*/
+        if(this._showbgAcion==true)
+        {
+            var obj=this;
+            obj.setScale(0.8);
+            if(obj!=null){
+                var sl=cc.EaseIn.create(cc.ScaleTo.create(0.15,1.1),2);
+                var sl2=cc.ScaleTo.create(0.15,1);
+                var seq=cc.Sequence(sl,sl2);
+                obj.runAction(seq);
+            }
+        }
+    },
+
+    setBgColor:function(color){
+        this._bgFrame.setColor(color);
+    },
+
+    onEnter:function(){
+        this._super();
+    },
+    onExit:function(){
+        this._super();
+
+    }
+});
+
+
+Mlog.js
+
+/**
+ * 自定义输出日志
+ */
+var OPENLOGFLAG = true;
+
+var Mlog = function () {
+    this.flag = 0;
+}
+
+/*正常输出*/
+Mlog.c = function(){
+    var bakLog = cc._cocosplayerLog || cc.log || log;
+    if(OPENLOGFLAG==true)
+    {
+        bakLog.call(this,"Mlog:" + cc.formatStr.apply(cc, arguments));
+    }
+};
+/*错误输出*/
+Mlog.e = function(){
+    var bakLog = cc._cocosplayerLog || cc.log || log;
+    if(OPENLOGFLAG==true)
+    {
+        bakLog.call(this, "Mlog_ERROR:" + cc.formatStr.apply(cc, arguments));
+    }
+};
+
+主界面自定义层
+
+MainLayer.js
+
+var MainLayer = BaseLayer.extend({
+    ctor:function(){
+        this._oktouch=true;//开启可透点击
+        this._showbg=true;//开启背景
+        this._showbgAcion=false;//主界面不需要弹出效果
+        this._super();
+        var mainbg =cc.Sprite(res.MainBG);
+        mainbg.attr({
+            x:this.getContentSize().width/2,
+            y:this.getContentSize().height/2,
+            scale:1,
+            ratation:0
+        });
+        mainbg.setAnchorPoint(cc.p(0.5,0.5));
+        this.addChild(mainbg);
+
+        Mlog.c(" this layer is " + "ok");
+    }
+});
+
+
+var MainScene = cc.Scene.extend({
+    onEnter:function(){
+        this._super();
+        var layer = new MainLayer();
+        this.addChild(layer);
+    }
+});
+
+
+HttpHelper.js：
+
+function  Http(){
+    var _succCallback = function(){};
+    var _errCallback = function(){};
+
+}
+Http.prototype.getJSON = function(url,data,callBack,errorCallBack ){
+    if(typeof (callBack) == "function"){
+        this._succCallback = callBack;
+    }else{
+        this._succCallback = function(){}
+    }
+    if(typeof (errorCallBack) == "function"){
+        this. _errorCallBack = errorCallBack;
+    }
+    var xmlHttp = new XMLHttpRequest();
+
+    var params = "";
+    if(typeof(data)=="object"){
+        for(key in data){
+            params+=(key+"="+data[key]+"&");
+        }
+    }else{
+        params = data;
+    }
+
+    xmlHttp.open("POST",url);
+    xmlHttp.send(params);
+
+    var me=this;
+    //===================  ajax回调
+    xmlHttp.onreadystatechange = function(){
+
+        cc.log(url+" "+ JSON.stringify(params) +xmlHttp.responseText);
+        if(xmlHttp.readyState == 4){
+            if(xmlHttp.status == 200){
+                MLog.l("data :",xmlHttp.responseText);
+                var strData = "";
+                if(xmlHttp.responseText.length>0){ //当内容为空时会有"[]"
+                    strData=xmlHttp.responseText;
+                    me._succCallback(strData);
+
+                }else{
+                    MLog.l("什么都没有，请检查网络");
+                    return;
+                }
+            }
+            else{
+                //网络错误处理
+                if(me._errorCallBack) {
+                    JSON.stringify(me._errorCallBack);
+                    me._errorCallBack();
+                }
+            }
+        }else{
+            //网络错误处理
+            if(me._errorCallBack) {
+                me._errorCallBack();
+            }
+        }
+    }
+}
+
+NetManager.js：
+
+//服务器接口地址
+var serverAddr = "http://xxx/xxx/xxx";//正式线上
+
+//具体方法实现方法
+var NetManager = {
+
+    /**
+     * 通用获取数据方法getMessage
+     * @param successCallBack 成功后回调函数
+     * @param errorCallBack  失败后回调函数(默认不填)
+     */
+    getMessage: function(data,successCallBack) {
+        var http = new Http();
+        var sendData = data;
+        http.getJSON(serverAddr, sendData, successCallBack, null);
+    }
+
+};
+
+
+ //发送Post数据
+var senddata = {
+	APIId:10000
+}
+//调用网络连接方法，获取data
+NetManager.getMessage(senddata,function(data){
+	Mlog.c("data >>",data);
+});

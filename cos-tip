@@ -1,0 +1,3 @@
+cc.loader._createScript('res/script/1.js', false, function(){
+    alert('无缓存加载')
+});

@@ -1,0 +1,250 @@
+<?php
+
+use yii\helpers\Html;
+
+use frontend\assets\AppAsset;
+use common\widgets\Alert;
+use yii\data\ActiveDataProvider;
+
+use yii\widgets\Breadcrumbs;
+use yii\widgets\Menu;
+use yii\widgets\ActiveForm;
+use yii\widgets\DetailView;
+use yii\widgets\ListView;
+use yii\widgets\Pjax;
+use yii\grid\GridView;
+
+use backend\models\Article2;
+AppAsset::register($this);
+
+$model = Article2::findOne(25);
+
+$query = Article2::find();
+
+$dataProvider = new ActiveDataProvider([
+    'query' => $query,
+    'pagination' => [
+        'pageSize' => 10,
+    ],
+    'sort' => [
+        'defaultOrder' => [
+            'id' => SORT_DESC,
+        ]
+    ],
+]);
+
+/*面包*/
+$this->params['breadcrumbs'][] = ['label'=>"Category",'url'=>'article-type/index'];
+$this->params['breadcrumbs'][] = 'type';
+
+?>
+<?php $this->beginPage() ?>
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>bootstarp</title>
+	<!-- 样式 js-->
+	<?php $this->head() ?>
+	<style type="text/css">
+	.active1{
+		color:red;
+	}
+	</style>
+</head>
+<body>
+<?php $this->beginBody() ?>
+
+<!-- 面包 -->
+<?=Breadcrumbs::widget([
+    'itemTemplate' => "<li>{link}</li>\n",
+    'activeItemTemplate' => "<li class=\"active\">{link}</li>\n",
+    'links' => [
+        [
+            'label' => 'Post Category',
+            'url' => ['post-category/view', 'id' => 10],
+            'template' => "<li><b>{link}</b></li>\n", 
+        ],
+        ['label' => 'Sample Post', 'url' => ['site/bootstrap']],
+        'Edit',
+    ],
+]);?>
+
+<?= Breadcrumbs::widget([
+    'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
+]) ?>
+
+<!-- 菜单 -->
+<?=Menu::widget([
+	'activeCssClass'=>'active1',
+    'items' => [
+        ['label' => 'Home', 'url' => ['site/index'],'active'=>true],
+        ['label' => 'Products', 'url' => ['product/index'], 
+        	'items' => [
+            	['label' => 'New Arrivals', 'url' => ['product/index', 'tag' => 'new'],'active'=>true],
+            	['label' => 'Most Popular', 'url' => ['product/index', 'tag' => 'popular']],
+        	]
+        ],
+        ['label' => 'Login', 'url' => ['site/login'], 'visible' => Yii::$app->user->isGuest],
+    ],
+]);?>
+
+<!-- 详情表格 -->
+<?php echo DetailView::widget([
+    'model' => $model,
+    'attributes' => [
+        'title',               // title attribute (in plain text)
+        'content:html',    		// description attribute in HTML
+        [                      // the owner name of the model
+            'label' => 'Owner',
+            'value' => $model->title,
+        ],
+        'add_time:datetime', // creation date formatted as datetime
+    ],
+]);?>
+
+input widget
+http://blog.csdn.net/abwxwx/article/details/49947501
+
+<!-- listview -->
+<?php
+ListView::begin([
+    'dataProvider'=>$dataProvider,
+    'itemView'=>'list_view_item',
+    'layout'=>'{items}{pager}',
+    'itemOptions'=>['class'=>'mydd_box'],
+    'pager'=>[
+        'maxButtonCount'=>10,
+        'nextPageLabel'=>Yii::t('app','下一页'),
+        'prevPageLabel'=>Yii::t('app','上一页'),
+    ],
+]);
+//{summary}的位置会显示基本描述，可修改summaryText项来设置描述的模板
+//{sorter}的位置会显示更改排序方式的按钮，需要定义sortableAttributes项来描述哪一属性是可排序的
+//{items}的位置会显示列表，列表中每一项的格式来自itemView项定义的文件
+//{pager}的位置会显示分页器，可通过定义pager项来设定分页器的显示方式
+
+
+/*
+list_view_item.php
+
+use yii\helpers\Html;  
+use yii\helpers\HtmlPurifier;  
+
+<div class="post">  
+    <strong><?= Html::encode($model->id) ?></strong>  
+    <a href="test/index/<?= $model->id ?>"><?= HtmlPurifier::process($model->title) ?> </a>     
+</div>  
+*/
+
+ListView::end();
+?>
+
+
+
+<!-- GridView -->
+<?php Pjax::begin(); ?>
+<?= GridView::widget([
+      'dataProvider' => $dataProvider,
+      'columns' => [
+          'id',
+          'title',
+          'content',
+          'add_time:datetime',
+      ],
+]) ?>
+<?php Pjax::end(); ?>
+
+
+<!-- 表单 -->
+<?php $form = ActiveForm::begin([  
+    'action' => ['log/login'], //提交地址(*可省略*)  
+    'method'=>'post',    //提交方法(*可省略默认POST*)  
+    'id' => 'login-form', //设置ID属性  
+    'options' => [  
+            'class' => 'form-horizontal', //设置class属性  
+            'enctype' => 'multipart/form-data' //文件上传时添加该编码  
+    ],  
+    'fieldConfig' => [  
+            'template' => '<div class="form-group"><center><label class="col-md-2 control-label" for="type-name-field">{label}</label></center><div class="col-md-8 controls">{input}{error}</div></div>'  
+    ],  //设置模板的样式  
+]);?>  
+  
+    <!--文本框 (*验证长度可在这里写 maxlength 这样就不用再 model 里面写了 *)-->  
+    <?= $form->field($model, 'title',['inputOptions' => ['placeholder'=>'请输入用户名','class' => 'ipt'],'template'=>'<div class="form-group"><center><label class="col-md-2 control-label" for="type-name-field">{label}</label></center><div class="col-md-8 controls">{input}{error}</div></div>'])->textInput(['maxlength' => 20,"style"=>"width:200px; height:30px;"]) ?>  
+      
+    <!--密码框 (*不使用他的lable只需要用false把他禁止, 然后你可以自己写*)-->  
+    <div class='col-md-2 control-label'><h4>密码</h4></div>
+    <?= $form->field($model, 'title')->label(false)->passwordInput(['maxlength' => 20,"style"=>"font-size:18px;","placeholder"=>"请输入您的密码"]) ?>  
+  
+    <?= $form->field($model, 'title')->passwordInput(['maxlength' => 20,"style"=>"width:200px; height:30px;","placeholder"=>"请输入您的密码"]) ?>  
+      
+    <!--单选按钮(*设置默认选中*)-->  
+    <?php $model->title=1; echo $form->field($model, 'title')->radioList(['1'=>'男','0'=>'女']) ?>  
+  
+    <!--普通-->  
+    <?= $form->field($model, 'title')->textInput() ?>  
+      
+    <!--下拉框的默认选中使用 prompt 设置 -->  
+    <?php $model->title=1; echo $form->field($model, 'title')->dropDownList(['1'=>'大学','2'=>'高中','3'=>'初中'], ['prompt'=>'请选择','style'=>'width:120px']) ?>  
+      
+    <!--文件上传-->  
+    <?= $form->field($model, 'title')->fileInput() ?>  
+      
+    <!--复选框 -->  
+    <?= $form->field($model, 'title')->checkboxList(['0'=>'篮球','1'=>'足球','2'=>'羽毛球','3'=>'乒乓球']) ?>  
+      
+    <!--文本域-->  
+    <?= $form->field($model, 'title')->textarea(['rows'=>3]) ?>  
+      
+    <!--隐藏域-->  
+    <?= $form->field($model, 'title')->hiddenInput(['value'=>3])->label(false); ?>  
+  
+    <?= Html::submitButton('提交', ['class'=>'btn btn-primary','name' =>'submit-button']) ?>  
+         
+    <?= Html::resetButton('重置', ['class'=>'btn btn-primary','name' =>'submit-button']) ?>  
+  
+<?php ActiveForm::end(); ?>  
+
+<pre>
+/** 
+ * model 验证规则 相关
+ */  
+public function rules()  
+{  
+    return [  
+        //验证不能为空  
+        [['username', 'pwd', 'email', 'hobby'], 'required' ,"message"=>"{attribute}不能为空"],   
+          
+        //验证用户唯一  
+        ['username', 'unique', 'targetClass' => '\frontend\models\User', 'message' => '用户名已存在.'],  
+
+        //验证密码不一致  
+        ['re_pwd', 'compare', 'compareAttribute' => 'pwd', 'message' => '两次密码不一致'],  
+
+        //验证字符串长度  
+        [['username'],"string", "max"=>"10", "min"=>"5", "tooLong"=>"{attribute}不能大于10个字符", "tooShort"=>"{attribute}不能小于5个字符"],  
+
+        //验证文件上传的格式  
+         ['photo','file',  
+            'extensions'=>['jpg','png','gif'],'wrongExtension'=>'只能上传{extensions}类型文件！',  
+            'maxSize'=>1024*1024*2,  'tooBig'=>'文件上传过大！',  
+            'skipOnEmpty'=>false,'uploadRequired'=>'请上传文件！',  
+            'message'=>'上传失败！'  
+         ]  
+
+        //采用rules 规则验证  
+        ['email', 'email',"message"=>"{attribute}格式错误"],   
+        //方法2:   
+        //正则验证  ['tel','match','pattern'=>'/^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})?$/','message'=>"{attribute}邮箱输入有误."],  
+
+        [['remark'], 'string', 'max' => 200],  
+          
+          
+    ];  
+}  
+</pre>
+<?php $this->endBody() ?>
+</body>
+</html>
+<?php $this->endPage() ?>

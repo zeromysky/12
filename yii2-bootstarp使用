@@ -1,0 +1,246 @@
+<?php
+
+use yii\helpers\Html;
+use frontend\assets\AppAsset;
+
+
+use yii\bootstrap\Alert;
+use yii\bootstrap\Button;
+use yii\bootstrap\ButtonDropdown;
+use yii\bootstrap\ButtonGroup;
+use yii\bootstrap\Carousel;
+use yii\bootstrap\Collapse;
+use yii\bootstrap\Dropdown;
+use yii\bootstrap\Modal;
+use yii\bootstrap\Nav;
+use yii\bootstrap\NavBar;
+use yii\bootstrap\Progress;
+use yii\bootstrap\Tabs;
+
+
+AppAsset::register($this);
+?>
+<?php $this->beginPage() ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>doc</title>
+    <?php $this->head() ?>
+    <style type="text/css">
+    .layui-carousel a { display: block; width: 100%; height: 100%; background-size: auto 350px !important }
+    </style>
+</head>
+<body>
+<?php $this->beginBody() ?>
+
+<!-- 提示框 -->
+<?php Alert::begin(['options'=>['class' => 'alert-warning']]);?>
+Alert
+<?php Alert::end(); ?>
+
+<!-- 按钮 -->
+<?php echo Button::widget([
+    'label' => 'button',
+    'options' => ['class' => 'btn-lg btn-primary'],
+]); ?>
+
+<!-- 按钮菜单 -->
+<?php echo ButtonDropdown::widget([
+    'label' => 'button',
+    'options' => ['class' => 'btn-lg btn-primary'],
+    'dropdown' => [
+        'items' => [
+            ['label' => 'DropdownA', 'url' => '/'],
+            ['label' => 'DropdownB', 'url' => '#'],
+        ],
+    ],
+]); ?>
+
+<!-- 按钮组 -->
+<?php echo ButtonGroup::widget([
+    'buttons' => [
+        ['label' => 'A','options' => ['class' => 'btn-primary']],
+        ['label' => 'B','options' => ['class' => 'btn-primary']],
+        ['label' => 'C', 'visible' => false,'options' => ['class' => 'btn-primary']],
+    ]
+]); ?>
+
+<!-- 幻灯片 -->
+<?php echo Carousel::widget([
+    'controls' => ['<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span><span class="sr-only">&lsaquo;</span>', '<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span><span class="sr-only">&rsaquo;</span>'],
+    'items' => [
+        // 只有图片的格式
+        // '<img src="image/1.jpg"/>',
+        // '<img src="image/2.png"/>',
+        
+        // 与上面的效果一致
+        //['content' => '<img src="http://www.yii-china.com/statics/images/b_1.jpg"/>'],
+        
+        //包含图片和字幕的格式
+        [
+            'content' => '<img src="image/1.jpg"/>',
+            'caption' => '<h4>one This is title</h4><p>This is the caption text</p>',
+            //'options' => [...],       //配置对应的样式
+        ],
+         [
+            'content' => '<img src="image/2.png"/>',
+            'caption' => '<h4>two This is title</h4><p>This is the caption text</p>',
+            //'options' => [...],       //配置对应的样式
+        ],
+    ]
+]);
+?>
+
+<!-- 手风琴 -->
+<?php echo Collapse::widget([
+    'items' => [
+      'Introduction' => 'This is the first collapsable menu',
+      'Second panel' => [
+          'content' => 'This is the second collapsable menu',
+      ],
+      [
+          'label' => 'Third panel',
+          'content' => 'This is the third collapsable menu',
+      ],
+  ]
+]);?>
+
+<!-- 链接菜单 -->
+<div class="dropdown">
+    <a href="#" data-toggle="dropdown" class="dropdown-toggle">Label <b class="caret"></b></a>
+    <?php
+     echo Dropdown::widget([
+         'items' => [
+             ['label' => 'DropdownA', 'url' => '/'],
+             ['label' => 'DropdownB', 'url' => '#'],
+         ],
+     ]);
+    ?>
+</div>
+
+
+<!-- 对话框 -->
+<?php Modal::begin([
+    'header' => '<h2>Hello world</h2>',
+    'toggleButton' => ['label' => 'click me','class' => 'btn-primary']
+]);?>
+
+对话框
+
+<?php echo Button::widget([
+    'label' => 'button',
+    'options' => ['class' => 'btn-lg btn-primary'],
+]); ?>
+
+<?php Modal::end(); ?>
+
+
+<!-- 导航 -->
+<?php
+NavBar::begin(['brandLabel' => 'NavBar Test']);
+echo Nav::widget([
+    'items' => [
+        [
+            'label' => 'Home',
+            'url' => ['site/index'],
+            // 'linkOptions' => [...],
+        ],
+        [
+            'label' => 'Dropdown',
+            'items' => [
+                 ['label' => 'Level 1 - Dropdown A', 'url' => '#'],
+                 '<li class="divider"></li>',
+                 '<li class="dropdown-header">Dropdown Header</li>',
+                 ['label' => 'Level 1 - Dropdown B', 'url' => '#'],
+            ],
+        ],
+        [
+            'label' => 'Login',
+            'url' => ['site/login'],
+            'visible' => Yii::$app->user->isGuest
+        ],
+    ],
+    'options' => ['class' =>'navbar-nav'], 
+]);
+NavBar::end();
+?>
+
+<!-- 进度条 -->
+
+<?php
+// default with label
+echo Progress::widget([
+    'percent' => 60,
+    'label' => 'test',
+]);
+// styled
+echo Progress::widget([
+    'percent' => 65,
+    'barOptions' => ['class' => 'progress-bar-danger']
+]);
+// striped
+echo Progress::widget([
+    'percent' => 70,
+    'barOptions' => ['class' => 'progress-bar-warning'],
+    'options' => ['class' => 'progress-striped']
+]);
+// striped animated
+echo Progress::widget([
+    'percent' => 70,
+    'barOptions' => ['class' => 'progress-bar-success'],
+    'options' => ['class' => 'active progress-striped']
+]);
+// stacked bars
+echo Progress::widget([
+    'bars' => [
+        ['percent' => 30, 'options' => ['class' => 'progress-bar-danger']],
+        ['percent' => 30, 'label' => 'test', 'options' => ['class' => 'progress-bar-success']],
+        ['percent' => 35, 'options' => ['class' => 'progress-bar-warning']],
+    ]
+]);
+?>
+
+<!-- 选项卡 -->
+<?php echo Tabs::widget([
+    'items' => [
+        [
+            'label' => 'One',
+            'content' => '111A1nim pariatur cliche...',
+            'active' => true
+        ],
+        [
+            'label' => 'Two',
+            'content' => '222Anim pariatur cliche...',
+            // 'headerOptions' => [...],
+            'options' => ['id' => 'myveryownID'],
+        ],
+        [
+            'label' => 'Example',
+            'url' => 'http://www.example.com',
+        ],
+        [
+            'label' => 'Dropdown',
+            'items' => [
+                 [
+                     'label' => 'DropdownA',
+                     'content' => 'DropdownA, Anim pariatur cliche...',
+                 ],
+                 [
+                     'label' => 'DropdownB',
+                     'content' => 'DropdownB, Anim pariatur cliche...',
+                 ],
+                 [
+                     'label' => 'External Link',
+                     'url' => 'http://www.example.com',
+                 ],
+            ],
+        ],
+    ],
+]);?>
+
+<?php $this->endBody() ?>
+</body>
+</html>
+<?php $this->endPage() ?>

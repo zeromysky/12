@@ -1,0 +1,112 @@
+6.rbac 权限管理 yii2 自带
+
+blog
+http://www.yii-china.com/post/detail/32.html
+
+6.1 在console下 ， 配置component 
+'authManager' => [   
+     'class' => 'yii\rbac\DbManager',    
+     'itemTable' => 'auth_item',    
+     'assignmentTable' => 'auth_assignment',    
+     'itemChildTable' => 'auth_item_child',
+],
+6.2 在advanced目录下cmd运行
+yii migrate --migrationPath=@yii/rbac/migrations/
+相当于执行
+vendor\yiisoft\yii2\rbac\migrations\schema-mysql.sql 
+6.2 在backend下，配置component 
+'authManager' => [   
+     'class' => 'yii\rbac\DbManager',    
+     'itemTable' => 'auth_item',    
+     'assignmentTable' => 'auth_assignment',    
+     'itemChildTable' => 'auth_item_child',
+],
+
+auth_item表 type 1：角色 2：权限
+
+
+--BaseController.php
+
+
+<?php
+namespace backend\controllers;
+use Yii;
+use yii\web\Controller;
+
+class BaseController extends Controller{
+
+	public function beforeAction()
+	{    
+	    if($this->checkPermission()){
+	        return true;
+	    }else{
+	        throw new \yii\web\UnauthorizedHttpException('对不起，您现在还没获此操作的权限');
+	    }
+
+	}
+	/**
+	 * 检查权限
+	 */
+	public function checkPermission()
+	{	
+		$action = Yii::$app->controller->action->id;
+	    $controller = Yii::$app->controller->id;
+		$params = [];
+		$user_id = 1;
+	    $access = Yii::$app->authManager->checkAccess($user_id,$controller.'/'.$action, $params);
+	    return $access;
+	}
+
+	/**
+	 * 创建权限
+	 * index.php?r=base/create-permission&item=article/index
+	 */
+	public function actionCreatePermission($item)
+	{    
+	    $auth = Yii::$app->authManager;    
+	    $createPost = $auth->createPermission($item);    
+	    $createPost->description = '创建了 ' . $item. ' 权限';    
+	    $auth->add($createPost);
+	}
+
+	/**
+	 * 创建角色
+	 * index.php?r=base/create-role&item=root
+	 */
+	public function actionCreateRole($item)
+	{    
+	    $auth = Yii::$app->authManager;    
+	    $role = $auth->createRole($item);    
+	    $role->description = '创建了 ' . $item. ' 角色';    
+	    $auth->add($role);
+	}
+
+	/**
+	 * 将权限赋给角色
+	 * index.php?r=base/role-permission&role=root&permission=article/index
+	 */
+	public function actionRolePermission($role,$permission)
+	{    
+	    $auth = Yii::$app->authManager;    
+	    $parent = $auth->createRole($role);               
+	    $child = $auth->createPermission($permission);  
+	    $auth->addChild($parent, $child);              
+	}
+
+	/**
+	 * 将角色赋给用户
+	 * index.php?r=base/user-role&user_id=1&role=root
+	 * index.php?r=base/user-role&user_id=1&role=article/create
+	 */
+	public function actionUserRole($user_id,$role)
+	{    
+	    $auth = Yii::$app->authManager;    
+	    $role = $auth->createRole($role);        
+	    $auth->assign($role, $user_id);  
+	}
+
+
+}
+
+
+

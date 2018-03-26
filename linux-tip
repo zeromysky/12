@@ -1,0 +1,10 @@
+查找 软件安装路径
+whereis nginx
+
+ps -ef | grep nginx
+
+找到主进程ID
+ll /proc/主进程ID 
+
+exe->
+

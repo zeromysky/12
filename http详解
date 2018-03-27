@@ -1,0 +1,211 @@
+【HTTP】
+
+1.HTTP协议，即超文本传输协议(Hypertext transfer protocol)。
+2.HTTP协议作为TCP/IP模型中应用层的协议也不例外。
+HTTP协议通常承载于TCP协议之上，
+https 也承载于TLS或SSL协议层之上
+3.HTTP是一个应用层协议，由请求和响应构成，是一个标准的客户端服务器模型。HTTP是一个无状态的协议。
+4.HTTP默认的端口号为80，HTTPS的端口号为443。
+
+应用层 ：http (https)
+传输层 ：TCP
+网络层 ：IP
+数据链路层 ： 帧
+物理层
+
+客户机会将请求封装成
+http数据包-->封装成Tcp数据包-->封装成Ip数据包--->
+封装成数据帧--->硬件将帧数据转换成bit流（二进制数据）-->
+最后通过物理硬件（网卡芯片）发送到指定地点。
+
+http header
+
+1.通用头部
+
+请求地址：Request URL: http://oa.pma.com/index.php?r=sub-game%2Findex&appid=10&online=1
+请求方式：Request Method: GET
+状态码：  Status Code: 200 OK
+路由地址： Remote Address: 192.168.1.158:80
+来源策略： Referrer Policy: no-referrer-when-downgrade
+
+Request URL:	请求的URL地址
+Request Method: 请求方法，get/post/put/……
+Status Code：	状态码，200 为请求成功
+Remote Address：路由地址
+
+
+2.请求头部
+
+
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9
+Cache-Control: no-cache
+Connection: keep-alive
+Cookie: _identity=0051cf575cbcd988aacf38f97a2b8746b967cac7d151210652c9029567703c16a%3A2%3A%7Bi%3A0%3Bs%3A9%3A%22_identity%22%3Bi%3A1%3Bs%3A20%3A%22%5B%22192%22%2Cnull%2C2592000%5D%22%3B%7D; PHPSESSID=loj7ovqbnh8gni3r5lq9au1mm5
+Host: oa.pma.com
+Pragma: no-cache
+Referer: http://oa.pma.com/index.php?r=site%2Findex&appid=10&online=1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36
+
+1）Accept:	告诉WEB服务器自己接受什么媒体类型，*/* 表示任何类型，type/* 表示该类型下的所有子类型；
+
+2）
+
+ Accept-Charset:	浏览器申明自己接收的字符集
+
+ Accept-Encoding:	浏览器申明自己接收的编码方法，通常指定压缩方法，是否支持压缩，支持什么压缩方法  （gzip，deflate）
+
+ Accept-Language：  浏览器申明自己接收的语言。语言跟字符集的区别：中文是语言，中文有多种字符集，比如big5，gb2312，gbk等等。
+ 
+3）Authorization：  当客户端接收到来自WEB服务器的 WWW-Authenticate 响应时，该头部来回应自己的身份验证信息给WEB服务器。
+
+4）Connection：表示是否需要持久连接。
+	close（告诉WEB服务器或者代理服务器，在完成本次请求的响应后，断开连接，不要等待本次连接的后续请求了）。
+	keep-alive（告诉WEB服务器或者代理服务器，在完成本次请求的响应后，保持连接，等待本次连接的后续请求）。
+
+5）Referer：发送请求页面URL。浏览器向 WEB 服务器表明自己是从哪个 网页/URL 获得/点击 当前请求中的网址/URL。
+
+6）User-Agent: 浏览器表明自己的身份（是哪种浏览器）。
+
+7）Host： 发送请求页面所在域。
+
+8）Cache-Control：	浏览器应遵循的缓存机制。
+        no-cache:	（不要缓存的实体，要求现在从WEB服务器去取）
+        max-age：	（只接受 Age 值小于 max-age 值，并且没有过期的对象） 
+        max-stale：	（可以接受过去的对象，但是过期时间必须小于 max-stale 值）  
+        min-fresh：	（接受其新鲜生命期大于其当前 Age 跟 min-fresh 值之和的缓存对象）
+
+9）	Pramga：主要使用 Pramga: no-cache，相当于 Cache-Control： no-cache。
+
+10）Range：	浏览器（比如 Flashget 多线程下载时）告诉 WEB 服务器自己想取对象的哪部分。
+
+11）Form：	一种请求头标，给定控制用户代理的人工用户的电子邮件地址。
+
+12）Cookie：这是最重要的请求头信息之一
+
+13）Upgrade-Insecure-Requests: 浏览器自动升级请求，当访问为https 时，而页面访问有些资源为http，自动转为https
+
+
+
+3.响应头部
+
+
+Cache-Control: no-store, no-cache, must-revalidate
+Connection: keep-alive
+Content-Encoding: gzip
+Content-Type: text/html; charset=UTF-8
+Date: Tue, 27 Mar 2018 02:17:18 GMT
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Pragma: no-cache
+Server: nginx
+Set-Cookie: _identity=0051cf575cbcd988aacf38f97a2b8746b967cac7d151210652c9029567703c16a%3A2%3A%7Bi%3A0%3Bs%3A9%3A%22_identity%22%3Bi%3A1%3Bs%3A20%3A%22%5B%22192%22%2Cnull%2C2592000%5D%22%3B%7D; expires=Thu, 26-Apr-2018 02:17:18 GMT; Max-Age=2592000; path=/; HttpOnly
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+
+
+1） Age：当代理服务器用自己缓存的实体去响应请求时，用该头部表明该实体从产生到现在经过多长时间了。
+
+2）	Accept-Ranges：WEB服务器表明自己是否接受获取其某个实体的一部分（比如文件的一部分）的请求。
+		bytes：表示接受，none：表示不接受。
+
+3） Cache-Control：服务器应遵循的缓存机制。
+      public(可以用 Cached 内容回应任何用户)
+      private（只能用缓存内容回应先前请求该内容的那个用户）
+      no-cache（可以缓存，但是只有在跟WEB服务器验证了其有效后，才能返回给客户端） 
+      max-age：（本响应包含的对象的过期时间）  
+      ALL:  no-store（不允许缓存）  
+
+4） Connection： 是否需要持久连接
+      close（连接已经关闭）。
+      keepalive（连接保持着，在等待本次连接的后续请求）。
+      Keep-Alive：如果浏览器请求保持连接，则该头部表明希望 WEB 服务器保持连接多长时间（秒）。例如：Keep-Alive：300
+
+5）Content-Encoding：WEB服务器表明自己使用了什么压缩方法（gzip，deflate）压缩响应中的对象。 例如：Content-Encoding：gzip 
+
+6）Content-Language：WEB 服务器告诉浏览器自己响应的对象的语言。
+
+7）Content-Length：WEB 服务器告诉浏览器自己响应的对象的长度。例如：Content-Length: 26012
+
+8）Content-Range：WEB 服务器表明该响应包含的部分对象为整个对象的哪个部分。例如：Content-Range: bytes 21010-47021/47022
+
+9）Content-Type：WEB 服务器告诉浏览器自己响应的对象的类型。例如：Content-Type：application/xml
+
+10）Expired：WEB服务器表明该实体将在什么时候过期，对于过期了的对象，只有在跟WEB服务器验证了其有效性后，才能用来响应客户请求。
+	Expires: 用于说明网页的失效时间，如果该值为一个<0的值，则服务器是通知浏览器不要缓存
+
+11） Last-Modified：WEB 服务器认为对象的最后修改时间，比如文件的最后修改时间，动态页面的最后产生时间等等。
+
+12） Location：WEB 服务器告诉浏览器，试图访问的对象已经被移到别的位置了，到该头部指定的位置去取。
+
+13）Proxy-Authenticate： 代理服务器响应浏览器，要求其提供代理身份验证信息。
+
+14）Server: WEB 服务器表明自己是什么软件及版本等信息。
+
+15）Refresh：表示浏览器应该在多少时间之后刷新文档，以秒计。
+
+16）Last-Modified：这个头用于告诉浏览器，数据的最后修改时间
+
+17）Content-Encoding 通常用于对实体内容进行压缩编码，目的是优化传输，可以一边产生数据，一边发给客户端，WEB 服务器就需要使用"Transfer-Encoding: chunked"这样的方式来代替Content-Length。
+
+
+4.HTTP状态码
+
+1xx：指示信息–表示请求已接收，继续处理。
+
+2xx：成功–表示请求已被成功接收、理解、接受。
+
+3xx：重定向–要完成请求必须进行更进一步的操作。
+
+4xx：客户端错误–请求有语法错误或请求无法实现。
+
+5xx：服务器端错误–服务器未能实现合法的请求。
+
+
+
+100 : 继续。客户端继续请求
+101 : 切换协议
+
+200 ：客户端请求成功
+201 ：已创建，成功请求并创建
+202 ：已接受，已经接受请求，未处理
+203 ：非授权信息，请求成功，meta信息不在原始服务器，而是一个副本
+204 ：无内容。服务器成功处理，没有放回内容
+205 ：重置内容
+206 ：服务器处理了部分内容
+
+300 ：多种选择，请求的资源可以包括多个位置
+301 ：永久移动，请求的资源被永久移动到新的地址
+302 ：临时移动，资源只是临时被移动，客户端继续使用原来的地址
+303 ：查看其他，使用get和post请求查看
+304 ：未修改，服务器不返回，使用客户端缓存
+305 ：使用代理，请求的资源必须通过代理
+307 ：临时重定向，和302类似
+
+
+400 ：客户端请求有语法错误，服务器无法理解。
+401 ：要求用户身份认证，这个状态代码必须和WWW-Authenticate报头域一起使用。
+403 ：服务器收到请求，但是拒绝执行。
+404 ：请求资源不存在
+405 ：客户端请求中的方法停止
+406 ：服务器无法根据客户端内容的特性完成请求
+407 ：请求代理身份认证
+408 ：服务器等待客户端请求时间过长，超时
+409 ：服务器完成客户端的put的请求，服务器处理时发生的冲突
+410 ：客户端请求的资源以前有，现在不存在
+411 ：服务器无法处理客户端发送的请求不带content-length
+412 : 客户端请求信息的先决条件错误
+413 ：请求体过大，服务器无法理解，拒绝请求
+414 ：请求的url过长，服务器无法理解
+415 ：服务器无法处理请求附带的媒体格式
+416 ：客户端请求的范围无效
+
+500 ：服务器内部错误，无法完成请求。
+501 ：服务器不支持请求的功能。
+502 ：充当网关或代理服务器，从远端服务器收到了一个无效的请求。
+503 ：服务器当前不能处理客户端的请求，一段时间后可能恢复正常，举个例子：HTTP/1.1 200 OK（CRLF）
+504 ：充当网关或代理服务器，未及时从远端服务器获取请求
+505 ：服务器不支持请求的http协议版本
+
+

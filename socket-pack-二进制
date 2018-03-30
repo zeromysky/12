@@ -1,0 +1,840 @@
+【TCP/IP】
+
+1. TCP/IP 是供已连接因特网的计算机进行通信的通信协议。
+2. TCP/IP 指传输控制协议/网际协议 (Transmission Control Protocol / Internet Protocol)。
+3. TCP/IP 定义了电子设备（比如计算机）如何连入因特网，以及数据如何在它们之间传输的标准。
+
+
+在 TCP/IP 中包含一系列用于处理数据通信的协议：
+
+    TCP (传输控制协议) - 应用程序之间通信
+    UDP (用户数据包协议) - 应用程序之间的简单通信
+    IP 	(网际协议) - 计算机之间的通信
+    ICMP (因特网消息控制协议) - 针对错误和状态
+    DHCP (动态主机配置协议) - 针对动态寻址
+
+
+TCP/IP
+
+	TCP/IP 意味着 TCP 和 IP 在一起协同工作。
+
+	TCP 负责应用软件（比如你的浏览器）和网络软件之间的通信。
+
+	IP 负责计算机之间的通信。
+
+	TCP 负责将数据分割并装入 IP 包，然后在它们到达的时候重新组合它们。
+
+	IP 负责将包发送至接受者。
+
+
+TCP - 传输控制协议
+
+	TCP 用于从应用程序到网络的数据传输控制。
+
+	TCP 负责在数据传送之前将它们分割为 IP 包，然后在它们到达的时候将它们重组。
+	IP - 网际协议
+
+IP 负责计算机之间的通信。
+
+	IP 负责在因特网上发送和接收数据包。
+
+HTTP - 超文本传输协议
+
+	HTTP 负责 web 服务器与 web 浏览器之间的通信。
+
+	HTTP 用于从 web 客户端（浏览器）向 web 服务器发送请求，并从 web 服务器向 web 客户端返回内容（网页）。
+
+HTTPS - 安全的 HTTP
+
+	HTTPS 负责在 web 服务器和 web 浏览器之间的安全通信。
+
+	作为有代表性的应用，HTTPS 会用于处理信用卡交易和其他的敏感数据。
+
+
+
+1）UDP：
+
+    把数据打包
+    数据大小有限制（64k）
+    不建立连接
+    速度快，但可靠性低
+
+2）TCP：
+
+    建立连接通道
+    数据大小无限制
+    速度慢，但是可靠性高
+
+
+【组包】
+
+php进行一些二进制操作
+
+php写一个socket客户端连接一个用C++语言开发的游戏服务端。 
+
+服务器端开发人员使用了二进制的形式来定义协议的格式。协议格式如下：
+
+包头(2bytes)+加密(1byte)+命令码(2bytes)+帧内容
+
+1. 包头的内容是记录帧内容的长度；
+2. 加密:0表示不加密，1表示加密；
+3. 命令码为服务端命令识别符号；
+
+
+例如：
+
+$lastact   = pack('SCSa32a32',0x0040,0x00,0x0006, $username, $passwd );
+
+unpack('Sint1/Cchar1/Sint2/Cchar2/',$lastmessage);
+
+
+
+string pack (string $format [, mixed $args [, mixed $...]])
+
+
+一些规则：
+1.每个字母后面都可以跟着一个数字，表示 count（计数），如果 count 是一个 * 表示剩下的所有东西。
+2.如果你提供的参数比 $format 要求的少，pack 假设缺的都是空值。如果你提供的参数比 $format 要求的多，那么多余的参数被忽略。
+
+关于Pack:
+
+下面的第一部分把数字值包装成字节：
+
+$out = pack("CCCC",65,66,67,68);      # $out 等于"ABCD"
+$out = pack("C4",65,66,67,68);         # 一样的东西
+
+
+下面的对 Unicode 的循环字母做同样的事情：
+
+$foo = pack("U4",0x24b6,0x24b7,0x24b8,0x24b9);
+
+
+下面的做类似的事情，增加了一些空：
+
+$out = pack("CCxxCC",65,66,67,68);      # $out 等于 "AB\0\0CD"
+
+
+打包你的短整数并不意味着你就可移植了：
+
+$out = pack("s2",1,2);        
+# 在小头在前的机器上是 "\1\0\2\0"
+# 在大头在前的机器上是 "\0\1\0\2"
+
+
+在二进制和十六进制包装上，count 指的是位或者半字节的数量，而不是生成的字节数量：
+
+$out = pack("B32","...");
+$out = pack("H8","5065726c");         # 都生成“Perl”
+
+
+a 域里的长度只应用于一个字串：
+
+$out = pack("a4","abcd","x","y","z");      # "abcd"
+
+
+要绕开这个限制，使用多倍声明：
+
+ $out = pack("aaaa",    "abcd","x","y","z");   # "axyz"
+$out = pack("a" x 4,   "abcd","x","y","z");   # "axyz"
+
+
+a 格式做空填充：
+
+$out = pack("a14","abcdefg");         # " abcdefg\0\0\0\0\0\0"
+
+
+
+---pack.php
+
+/**
+*	pack 
+*/
+
+header("content-type:text/html;charset=utf-8");
+
+// a 一个填充空的字节串
+// A 一个填充空格的字节串
+// b 一个位串，在每个字节里位的顺序都是升序
+// B 一个位串，在每个字节里位的顺序都是降序
+// c 一个有符号 char（8位整数）值
+// C 一个无符号 char（8位整数）值；关于 Unicode 参阅 U
+// d 本机格式的双精度浮点数
+// f 本机格式的单精度浮点数
+// h 一个十六进制串，低四位在前
+// H 一个十六进制串，高四位在前
+// i 一个有符号整数值，本机格式
+// I 一个无符号整数值，本机格式
+// l 一个有符号长整形，总是 32 位
+// L 一个无符号长整形，总是 32 位
+// n 一个 16位短整形，“网络”字节序（大头在前）
+// N 一个 32 位短整形，“网络”字节序（大头在前）
+// p 一个指向空结尾的字串的指针
+// P 一个指向定长字串的指针
+// q 一个有符号四倍（64位整数）值
+// Q 一个无符号四倍（64位整数）值
+// s 一个有符号短整数值，总是 16 位
+// S 一个无符号短整数值，总是 16 位
+// u 一个无编码的字串
+// U 一个 Unicode 字符数字
+// v 一个“VAX”字节序（小头在前）的 16 位短整数
+// V 一个“VAX”字节序（小头在前）的 32 位短整数
+// w 一个 BER 压缩的整数
+// x 一个空字节（向前忽略一个字节）
+// X 备份一个字节
+// Z 一个空结束的（和空填充的）字节串
+// @ 用空字节填充绝对位置
+
+
+/*字节对应的ASCILL码*/
+function getAscill($str)
+{
+	$arr=str_split($str);
+	foreach ($arr as $v)
+	{
+		echo $v,"=",ord($v),"\n";
+	}
+	echo "=============\r\n\r\n";
+}
+
+function getBytes($string) { 
+    $bytes = array(); 
+    for($i = 0; $i < strlen($string); $i++){ 
+         $bytes[] = ord($string[$i]); 
+    } 
+    return $bytes; 
+} 
+
+// php里面string本来就是个byte array，不用转换，一般传输数字类型才需要pack。
+
+// 字节计算
+// strlen($str);// 中文 utf-8 3 个字节，gbk 2个字节。
+
+// 类型字母
+// a 如果设定的字节数有多，用填充空的字节串
+$str=(pack("a8", "中国")); //设定为8个字节
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("a8",$str));
+
+// A 一个填充空格的字节串
+$str=(pack("A*", "中国")); //不设定，刚好匹配所有
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+// A 一个填充空格的字节串
+$str=(pack("A8", "中国")); //设定为8个字节
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("A8",$str));
+
+
+$arr = getBytes('abc');
+var_dump($arr);
+
+// c 一个有符号 char（8位整数）值 一个字节
+$str=(pack("c", "-56"));     //与chr 类似  输入为ascill码  
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str);
+echo "unpack:"."\n";
+var_dump(unpack("C",$str));
+
+
+// C 一个无符号 char（8位整数）值；关于 Unicode 参阅 U   一个字节
+$str=(pack("C", "56"));     //与chr 类似  输入为ascill码
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str);
+echo "unpack:"."\n";
+var_dump(unpack("C",$str));
+
+
+// d 本机格式的双精度浮点数 8个字节
+$str=(pack("d", "5613452.123"));    
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str);
+echo "unpack:"."\n";
+var_dump(unpack("d",$str));
+
+// f 本机格式的单精度浮点数 4字节
+$str=(pack("f", "5613452.123"));    
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str);
+
+echo "unpack:"."\n";
+var_dump(unpack("f",$str));
+
+
+// h 一个十六进制串，低四位在前
+$str=(pack("h*", '96'));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("h*",$str));
+
+
+// i 一个有符号整数值，本机格式 短整形 32位 4个字节 64位8个字节
+$str=(pack("i", "-100000"));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+echo "unpack:"."\n";
+var_dump(unpack("i",$str));
+
+// I 一个无符号整数值，本机格式 短整形 32位 4个字节 64位8个字节
+$str=(pack("i", "100000"));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+echo "unpack:"."\n";
+var_dump(unpack("i",$str));
+
+
+// l 一个有符号长整形，总是 32 位 4个字节
+$str=(pack("l", "-10000015"));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("i",$str));
+
+// L 一个无符号长整形，总是 32 位
+$str=(pack("L", "10000015"));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("L",$str));
+
+
+// n 一个 16位短整形，“网络”字节序（大头在前）  2字节  最大 65535 ，超过重0开始  
+$str=(pack("n", "65535"));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("n",$str));
+
+// N 一个 32 位短整形，“网络”字节序（大头在前） 4字节
+$str=(pack("N", "-10000015"));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("N",$str));
+
+// s 一个有符号短整数值，总是 16 位 2字节  
+$str=(pack("s", "65535"));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("s",$str));
+
+
+// S 一个无符号短整数值，总是 16 位 2字节  
+$str=(pack("S", "65535"));
+echo $str,"=",strlen($str),"字节\n";
+getAscill($str); 
+
+echo "unpack:"."\n";
+var_dump(unpack("S",$str));
+
+
+
+// 1   signed char   有符号的单字节整数类型   1   -128~+127   
+// 2   short int   	短整型   2   -32768~+32767   
+// 3   int   			整型   4   -2147438648~+2147438647   
+// 4   long int   		长整型   4   -2147438648~+2147438647   
+// 5   long long int   长长整型   8   -9223372036854775808~+-9223372036854775807
+
+
+//int 类型值 4字节
+function write_int($value) 
+{
+	return pack("N", $value);	
+}
+
+//short int类型值 2字节 
+function write_short_int($value) 
+{
+	return pack("n", $value);
+}
+
+
+// php写一个socket客户端连接一个用C++语言开发的游戏服务端。 
+// 包头(2bytes)+加密(1byte)+命令码(2bytes)+帧内容
+// 包头(2bytes)+加密(1byte)+命令码(2bytes)+帧内容
+
+// 包头: length是总长度(4字节)  (protocol 协议名：3个字节)  命令码：cmdCode操作标志(2字节)  flag暂时无用(4字节) 
+
+
+
+----con_socket.php
+<?php
+/**
+ * socket pack
+ */
+
+
+// 字节编码类
+class Byte{  
+
+    //长度  
+    private $length=0;  
+   	//包
+    private $byte='';  
+    //操作码  
+    private $code;  
+    //加入包头
+    public function setBytePrev($content){  
+        $this->byte=$content.$this->byte;  
+    }  
+    public function getByte(){  
+        return $this->byte;  
+    }  
+    public function getLength(){  
+        return $this->length;  
+    }  
+    public function writeChar($string){  
+        $this->length+=strlen($string);  
+
+        $str=array_map('ord',str_split($string));  
+        foreach($str as $vo){  
+            $this->byte.=pack('c',$vo);  
+        }  
+
+        $this->byte.=pack('c','0');  
+        $this->length++;  
+    }  
+    public function writeInt($str){  
+        $this->length+=4;  
+        $this->byte.=pack('N',$str);  
+    }  
+    public function writeShortInt($interge){  
+        $this->length+=2;  
+        $this->byte.=pack('n',$interge);  
+    }  
+
+    //设置包
+    public function setByte($byte){
+        $this->byte = $byte;
+    }
+
+    public function readInt(){
+
+        $temp = substr ( $this->byte, 0, 4 );
+        $value = unpack ( "N", $temp );
+        $this->byte = substr ( $this->byte, 4 );
+        return $value [1];
+    }
+
+    public function readShortInt(){
+
+        $temp = substr ( $this->byte, 0, 2 );
+        $value = unpack ( "n", $temp );
+        $this->byte = substr ( $this->byte, 2 );
+        return $value [1];
+    }
+
+    //读取单个
+    public function readString(){
+        $length = $this->readShortInt();
+        $temp = substr ( $this->byte, 0, $length );
+        $this->byte = substr ( $this->byte, $length+1 );
+        $value = unpack ( "c*", $temp );
+        $arr = array_map('chr',$value);  
+        $str = implode("", $arr);
+        return $str;
+    }
+
+    //读取所有
+    public function readAll()
+    {
+        $out = array();
+        while (!empty($this->byte)) {
+            $out[] = $this->readString();
+        }
+        return $out;
+    }
+
+} 
+
+// 包操作
+class Packet{
+	//数据包
+    public $byte; 
+    //协议名
+    public $protocol = 'YDF';
+    //协议名长度
+    public $protocolLength = 3; 
+    //命令码 
+    public $cmdCode;  
+    //命令码长度
+    const CMD_CODE_LENGTH = 2;
+    //标识
+    public $flag = 12; 
+    //标识长度
+    const FLAG_LENGTH = 2;
+
+    public function __construct($protocol='YDF'){
+    	$this->protocol = $protocol;
+    	$this->protocolLength = strlen($protocol);
+    }
+
+    //开始
+    public function start(){
+    	$this->byte = new Byte(); 
+    }
+
+    //写入
+    public function write($data){  
+        if(is_string($data)||is_int($data)||is_float($data)){  
+            $data[]=$data;  
+        }  
+        if(is_array($data)){  
+            foreach($data as $vo){  
+                $this->byte->writeShortInt(strlen($vo));  
+                $this->byte->writeChar($vo);  
+            }  
+        }  
+         
+    }
+    //结束
+    public function end(){
+    	$this->setPrev();
+    }
+
+    //设定命令码
+    public function setCmdCode($cmdCode){
+    	$this->cmdCode = pack('n',$cmdCode);  
+    }
+
+    //设定标示
+    public function setFlag($flag){
+    	$this->flag = pack('n',$flag);  
+    }
+
+    /* 
+     *包的总长度
+     *包头: length是总长度(4字节)  (protocol 协议名：3个字节)  命令码：cmdCode操作标志(2字节)  标示flag(2字节) 
+     */  
+    public function getPacketSize(){  
+        $length=$this->byte->getLength();  
+        $length=intval($length)+$this->protocolLength+self::CMD_CODE_LENGTH+self::FLAG_LENGTH;
+        return pack('N',$length);  
+    } 
+    //包头长度
+    public function getPacketHeaderSize(){
+    	return 4+$this->protocolLength+self::CMD_CODE_LENGTH+self::FLAG_LENGTH; 
+    }
+  
+    //设置包头
+    public function setPrev(){  
+        $this->byte->setBytePrev($this->getPacketSize().$this->protocol.$this->cmdCode.$this->flag);  
+    }  
+
+
+    public function parsePacket($content) 
+	{
+
+		$header = substr( $content, 0, $this->getPacketHeaderSize() );
+		$arr = unpack("NLen/c".$this->protocolLength."Protocol/nCmdCode/nFlag", $header);
+		foreach ($this->protocol as $k=>$vo) {
+			if($arr['Protocol'.($k+1)] != ord ( $vo )){
+				return -1;
+			}
+		}
+		
+		if ($arr['CmdCode'] <= 0 || $arr['CmdCode'] >= 1000) 
+		{
+			return - 2;
+		}
+		
+		if ($arr['Len'] >= 0 && $arr['Len'] == strlen($content) ) 
+		{
+			return - 3;
+		}
+		
+
+        $this->setCmdCode($arr['CmdCode']);
+        $this->setFlag($arr['Flag']);
+
+		$content_body = substr ( $content, $this->getPacketHeaderSize());
+		
+        //设置包内容
+        $this->byte->setByte($content_body);
+        //获取所有
+        $arr = $this->byte->readAll();
+        return $arr;
+	}
+
+}
+
+
+// TCP
+class socketTcpClient{
+
+    //ip
+    public $ip = "127.0.0.1";
+    //端口
+    public $port = 8001;
+    //soctet 
+    public $socket = null;
+    //错误
+    public $errorcode = '';
+    public $errormsg = '';
+    function __construct($ip='127.0.0.1',$port=8001){
+
+        $socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        if($socket === false){
+            $this->errorcode = socket_last_error();
+            $this->errormsg = socket_strerror($this->errorcode);
+            return false;
+        }
+
+        $this->ip = $ip;
+        $this->port = $port;
+        //设置发送，接受最长时间
+        @socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 3, "usec" => 0));
+        @socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, array("sec" => 3, "usec" => 0));
+        socket_set_block($socket);
+
+        $result = @socket_connect($socket, $this->ip, $this->port);
+        if ($result === false) {
+            $this->errorcode = socket_last_error();
+            $this->errormsg = socket_strerror($this->errorcode);
+            return false;
+        }
+        $this->socket = $socket;
+
+        return $this->socket;
+    }
+
+    //发送
+    public function send($content='',$length=0){
+        if($this->socket === false || empty($content)){
+            return false;
+        }
+        if(empty($length)){
+            $length = strlen($content);
+        }
+
+        $result = @socket_write( $this->socket, $content, $length);
+        if($result === false){
+            $this->errorcode = socket_last_error();
+            $this->errormsg = socket_strerror($this->errorcode);
+            return false;
+        }
+       
+        return $result;
+    }
+
+
+    //接受
+    public function get($length=4096)
+    {
+        if($this->socket === false){
+            return false;
+        }
+
+        $result = @socket_recv($this->socket, $buf, $length, MSG_WAITALL);
+        if($result === false){
+            $this->errorcode = socket_last_error();
+            $this->errormsg = socket_strerror($this->errorcode);
+            return false;
+        }
+
+        return $buf;
+    }
+
+
+    /**
+     * 析构函数
+     */
+    public function __destruct()
+    {
+        if($this->socket !== false ){
+            @socket_close($this->socket);
+        }
+        
+    }
+
+}
+
+
+/*
+ +-------------------------------
+ *    @socket通信整个过程
+ +-------------------------------
+ *    @socket_create  //创建一个套接字
+ *    @socket_bind    //给套接字绑定 ip 和端口
+ *    @socket_listen  //监听套接字上的连接
+ *    @socket_accept  //接受一个socket连接
+ *    @socket_read   //接收客户端 发送的数据
+ *    @socket_write  //将数据写到 socket 缓存 向客户端发送
+ *    @socket_close  //关闭套接字资源
+ +--------------------------------
+ */
+
+/*----------------    以下操作都是手册上的    -------------------*/
+
+// AF_INET      IPv4 网络协议。TCP 和 UDP 都可使用此协议。
+// AF_INET6     IPv6 网络协议。TCP 和 UDP 都可使用此协议。
+// AF_UNIX      本地通讯协议。具有高性能和低成本的 IPC（进程间通讯）。 
+
+// SOCK_STREAM 提供一个顺序化的、可靠的、全双工的、基于连接的字节流。支持数据传送流量控制机制。TCP 协议即基于这种流式套接字。
+// SOCK_DGRAM   提供数据报文的支持。(无连接，不可靠、固定最大长度).UDP协议即基于这种数据报文套接字。 
+
+// 如果所需的协议是 TCP 或 UDP，可以直接使用常量 SOL_TCP 和 SOL_UDP 。 
+
+// socket_set_option($socket参数1 ，$level 参数2，$optname 参数3，$optval 参数4)
+
+// 这个函数的作用是给套接字设置数据流选项，还是一个很重要的函数。
+
+// 参数1：socket_create或者socket_accept的函数返回值
+
+// 参数2：SOL_SOCKET，好像只有这个选项
+
+// 参数3与参数4是相关联的，
+
+// 参数3可为：SO_REUSEADDR　　SO_RCVTIMEO     S0_SNDTIMEO
+
+// 解释一下：
+
+// SO_REUSEADDR　　是让套接字端口释放后立即就可以被再次使用
+
+// 　　　　　　　　参数3假如是这个，则参数4可以为true或者false
+
+// SO_RCVTIMEO　　 是套接字的接收资源的最大超时时间
+
+// SO_SNDTIMEO　　　是套接字的发送资源的最大超时时间
+
+// 参数3假如是这两个，则参数4是一个这样的数组array('sec'=>1,'usec'=>500000)
+
+// 数组里面都是设置超时的最大时间，不过，一个是秒为单位，一个是微秒单位，作用都一样
+
+
+
+-----client.php
+
+include "com_socket.php";
+
+$my_packet = new Packet('XIAOBAI');
+$my_packet->start();
+$my_packet->setCmdCode(100);
+$my_packet->setFlag(161);
+
+$data = array(
+	'你好44444',
+    'abcdadsdfsd',
+    '123',
+	44444,
+);
+$my_packet->write($data);
+$my_packet->end();
+$content = $my_packet->byte->getByte();
+
+
+$tcp = new socketTcpClient('127.0.0.1',8001);
+$res = $tcp->send($my_packet->byte->getByte(),$my_packet->getPacketHeaderSize()+$my_packet->byte->getLength());
+if(!$res){
+	echo "error";
+}
+$res = $tcp->get();
+$arr = $my_packet->parsePacket($res);
+var_dump($arr);
+
+----server.php
+
+<?php
+/**
+ * socket server
+ */
+
+
+//确保在连接客户端时不会超时
+set_time_limit(0);
+
+include "com_socket.php";
+
+$ip = '127.0.0.1';
+$port = 8001;
+
+
+if(($sock = socket_create(AF_INET,SOCK_STREAM,SOL_TCP)) < 0) {
+    echo "socket_create() 失败的原因是:".socket_strerror($sock)."\n";
+}
+
+if(($ret = socket_bind($sock,$ip,$port)) < 0) {
+    echo "socket_bind() 失败的原因是:".socket_strerror($ret)."\n";
+}
+
+if(($ret = socket_listen($sock,4)) < 0) {
+    echo "socket_listen() 失败的原因是:".socket_strerror($ret)."\n";
+}
+
+// socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1); //重用端口
+
+// @socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 4, "usec" => 0));
+// @socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, array("sec" => 4, "usec" => 0));
+
+$count = 0;
+$i = 0;
+do {
+	echo $i."\n";
+	/*接收请求*/
+    if (($msgsock = socket_accept($sock)) < 0) {
+        echo "socket_accept() failed: reason: " . socket_strerror($msgsock) . "\n";
+        break;
+    } else {
+        
+        //发到客户端
+        // $msg ="测试成功！\n";
+        // socket_write($msgsock, $msg);
+        
+        echo "success\n";
+        $buf = socket_read($msgsock,4069);
+        var_dump(strlen($msgsock));
+
+
+        $my_packet = new Packet('XIAOBAI');
+        $my_packet->start();
+        $arr = $my_packet->parsePacket($buf);
+        var_dump($arr);
+        
+        $data = array(
+            '1,2,3,4,5,6,7',
+            'wwwwwwww',
+        );
+        $my_packet->write($data);
+        $my_packet->end();
+
+        $result = @socket_write( $msgsock, $my_packet->byte->getByte() , $my_packet->getPacketHeaderSize()+$my_packet->byte->getLength());
+        var_dump($result);
+        
+        $talkback = "in msg : $buf\n";
+        echo $talkback;
+        
+      
+    
+    }
+    //echo $buf;
+    socket_close($msgsock);
+    echo $i."\n";
+
+} while (true);
+
+socket_close($sock);
+
+
+
+
+
+
+
+
+
+
+

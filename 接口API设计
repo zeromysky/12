@@ -1,0 +1,165 @@
+---ServerApi.php
+
+<?php
+/**
+*	SeverApi 类 
+*/
+class SeverApi
+{
+	//秘钥
+	public $app_key = "===key===";
+	//参数
+	public $param = array();
+	//开始时间
+	public $start_time = 0;
+	public $end_time = 0;
+	function __construct($param)
+	{	
+		$this->start_time = microtime(true);
+		if(empty($param)){
+			$param = file_get_contents('php://input');
+		}
+		$this->param = $param;
+	}
+
+	//处理
+	public function deal()
+	{
+		$this->param = json_decode($this->param , true);
+
+		if(empty($this->param)){
+			return $this->out(-1000,'param empty');
+		}
+
+		if(empty($this->param['sign'])){
+			return $this->out(-1001,'sign empty');
+		}
+
+		$clientSign = $this->param['sign'];
+		unset($this->param['sign']);
+		
+		$serverSign = $this->getSign();
+
+		if($serverSign !== $clientSign){
+			return $this->out(-1002,'invalid request');
+		}
+
+		//执行路由cmd(base64解析后),将参数带到该方法中
+		$do = $this->param['do'];
+		list($CLASS,$METHOD) = explode('.' , $do);
+ 		
+ 		unset($this->param['do']);
+		unset($this->param['timestamp']);
+
+		$class = new $CLASS();
+		$out = $class->$METHOD($this->param);
+		return $this->out(1,$out);
+
+	}
+
+	//获取sign
+	public function getSign(){
+		//将数组的键值按照自然排序从大到小排序
+		krsort($this->param);
+		$str = '';
+		foreach($this->param as $key=>$val){
+		    $str .= $key . '=' . $val . '&';
+		}
+		$str .= $this->app_key;
+		$serverSign = md5($str);
+		return $serverSign;
+	}
+
+	//输出
+	public function out($status,$data=false){
+		$this->end_time = microtime(true);
+		$deal_time = $this->end_time - $this->start_time;
+		if($status!=1){
+			$out = json_encode(array('status'=>$status,'code'=>'error','msg'=>$data,'deal_time'=>$deal_time));
+		}else{
+			$out = json_encode(array('status'=>$status,'code'=>'success','data'=>$data,'deal_time'=>$deal_time));
+		}
+		
+		return $out;
+	}
+
+
+}
+
+
+echo (new SeverApi($_POST))->deal();exit;
+
+
+class Test{
+	function ok($param){
+		sleep(1.5);
+		return $param;
+	}
+}
+
+
+----clientApi.php
+
+<?php
+
+/**
+* client 客户端
+*/
+class clientApi 
+{
+	//秘钥
+	static public $app_key = "===key===";
+	//参数
+	static public $param = array();
+
+	static public $url = "http://127.0.0.1/php/so/SeverApi.php";
+
+	static public function send($param){
+		$param['timestamp'] = time();
+		$sign = self::getSign($param);
+		$param['sign'] = $sign;
+		return self::to(self::$url, json_encode($param));
+	}
+
+	static public function getSign($param){
+		krsort($param);
+		$str = '';
+		foreach($param as $key=>$val){
+		    $str .= $key . '=' . $val . '&';
+		}
+		$str .= self::$app_key;
+		$clientSign = md5($str);
+		return $clientSign;
+	}
+
+	static public function to($url, $data=array(),$timeout=20){
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS,$data);
+		
+		$result = curl_exec ( $ch );
+		curl_close($ch);
+		return $result;
+	}
+
+}
+
+
+
+
+$data = array(
+	'do'=>'Test.ok',
+	'id'=>1
+);
+
+$arr = clientApi::send($data);
+var_dump($arr);
+
+
+
+

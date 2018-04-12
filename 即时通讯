@@ -1,0 +1,56 @@
+
+# redis 版
+
+配置
+type : hash
+key : config
+value : 
+
+user_id : 用户的id 10000开始
+
+https://segmentfault.com/a/1190000012969013
+
+用户
+type : hash
+key : user
+value : 
+
+user_id : {	
+	user_id :  用户ID 自增
+	name : 名字 
+	password : md5(密码)
+	sex : 性别
+	birthday : 生日
+	email : 邮箱
+	phnoe : 手机
+	face : 头像
+}
+
+聊天记录相关
+type : hash
+key : msg_20170412
+value :
+
+from_user_id|to_user_id : {
+	from_user_id : 来源ID
+	to_user_id : 目标ID
+	type : 类别 1 私信 2 群
+	status : 状态 0 未读 1 已读
+	add_time : 时间
+}
+
+
+未读取数量
+type : hash
+key : unread_num
+value :
+
+to_user_id : {
+	from_user_id : 1
+}
+
+
+
+
+
+
